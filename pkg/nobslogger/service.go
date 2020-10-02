@@ -2,6 +2,7 @@ package nobslogger
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net"
 )
@@ -38,12 +39,16 @@ func Initialize(hostURI string) *LogService {
 	}()
 	return &LogService{
 		messageChannel: messageChannel,
+		LogWriter:      conn,
 	}
 }
 
 // LogService provides access to an upstream UDP log server (such as LogStash).
 type LogService struct {
 	messageChannel chan *LogEntry
+	// LogWriter is an io.Writer that is exposed to allow the standard library's
+	// logger to also transmit logs a la `log.New(logService.LogWriter)`.
+	LogWriter io.Writer
 }
 
 // NewContext provides high level structured information used to decorate
