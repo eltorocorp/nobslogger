@@ -1,8 +1,9 @@
 package nobslogger_test
 
 import (
-	"terraform-registry/pkg/internal/nobslogger"
 	"testing"
+
+	"github.com/eltorocorp/nobslogger/pkg/nobslogger"
 )
 
 func BenchmarkEntrySerialize(b *testing.B) {
