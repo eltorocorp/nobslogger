@@ -3,6 +3,7 @@ package nobslogger
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net"
 )
@@ -12,10 +13,18 @@ import (
 // instance through which a more detailed logging context can be established.
 // This function will panic if an error occurs while establishing the connection
 // to the UDP server.
+// Special case: If hostURI is supplied as an empty string, the logger will
+// run, but all log messages are sent to a "null writer" (see `ioutil.Discard`).
 func Initialize(hostURI string) *LogService {
-	conn, err := net.Dial("udp", hostURI)
-	if err != nil {
-		panic(fmt.Errorf("error occured while establishing udp connection: %v", err))
+	var conn io.Writer
+	var err error
+	if hostURI == "" {
+		conn = ioutil.Discard
+	} else {
+		conn, err = net.Dial("udp", hostURI)
+		if err != nil {
+			panic(fmt.Errorf("error occured while establishing udp connection: %v", err))
+		}
 	}
 	messageChannel := make(chan *LogEntry)
 	go func() {
@@ -28,7 +37,6 @@ func Initialize(hostURI string) *LogService {
 			select {
 			case entry := <-messageChannel:
 				bytes := entry.Serialize()
-				fmt.Println(string(bytes))
 				_, err = conn.Write(bytes)
 				if err != nil {
 					fmt.Printf("error occured while transmitting log packet: %v", err)
