@@ -2,6 +2,9 @@
 NobSlogger. A fast, lightweight no BS structured/leveled logger.
 
 # Installation
+
+**!** *nobSlogger is currently in beta and should be considered unstable*
+
 `go get -u github.com/eltorocorp/nobslogger`
 
 # Quick Start
