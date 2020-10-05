@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net"
+	"strconv"
 	"time"
 )
 
@@ -60,7 +61,7 @@ LongPoll:
 	for {
 		select {
 		case entry := <-messageChannel:
-			_, err := conn.Write([]byte(entry.Serialize()))
+			_, err := conn.Write(entry.Serialize())
 			if err != nil {
 				fmt.Printf("error occured while transmitting log packet")
 				break LongPoll
@@ -91,7 +92,8 @@ func (ls *LogService) NewContext(site, operation string) LogContext {
 }
 
 func (ls *LogService) submitAsync(sc ServiceContext, lc LogContext, ld LogDetail) {
-	ld.Timestamp = time.Now().UTC().Format(time.RFC3339Nano)
+	// timestamping with unixnano is faster than converting to a std format.
+	ld.Timestamp = strconv.FormatInt(time.Now().UTC().UnixNano(), 10)
 	ls.messageChannel <- LogEntry{
 		ServiceContext: sc,
 		LogContext:     lc,

@@ -51,8 +51,9 @@ const (
 	field4Name  = "service_instance_id"
 	field4Value = "00000-11111-22222-33333-44444-55555"
 
-	field5Name  = "timestamp"
-	field5Value = "2006-01-02T15:04:05.999999999Z07:00"
+	field5Name = "timestamp"
+	// nobslogger tracks this as a unixnano. Doing similar here for an apples to apples comparison.
+	field5Value = "1601932749025031000"
 
 	field6Name  = "site"
 	field6Value = "benchmark method"

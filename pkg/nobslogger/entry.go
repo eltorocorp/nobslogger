@@ -12,8 +12,8 @@ type LogEntry struct {
 // no bullshit and really fast. This is less cute than using higher abstractions
 // but is also ~140 times faster than `json.MarshalIndent`, ~30 times faster
 // than `json.Marhsal`, and ~20 times faster than `fmt.Sprintf`.
-func (le *LogEntry) Serialize() string {
-	return "{" +
+func (le *LogEntry) Serialize() []byte {
+	return []byte("{" +
 		"\"timestamp\":\"" + le.Timestamp + "\"," +
 		"\"environment\":\"" + le.Environment + "\"," +
 		"\"system_name\":\"" + le.SystemName + "\"," +
@@ -25,5 +25,5 @@ func (le *LogEntry) Serialize() string {
 		"\"operation\":\"" + le.Operation + "\"," +
 		"\"message\":\"" + le.Message + "\"," +
 		"\"details\":\"" + le.Details + "\"" +
-		"}"
+		"}")
 }
