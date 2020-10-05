@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net"
 	"time"
 )
@@ -33,40 +32,40 @@ type ServiceContext struct {
 // to the UDP server.
 // Special case: If hostURI is supplied as an empty string, the logger will
 // run, but all log messages are sent to a "null writer" (see `ioutil.Discard`).
-func Initialize(hostURI string, serviceContext ServiceContext) *LogService {
+func Initialize(hostURI string, serviceContext *ServiceContext) LogService {
 	var conn io.Writer
-	var err error
 	if hostURI == "" {
 		conn = ioutil.Discard
 	} else {
-		conn, err = net.Dial("udp", hostURI)
+		cn, err := net.Dial("udp", hostURI)
 		if err != nil {
-			panic(fmt.Errorf("error occured while establishing udp connection: %v", err))
+			panic("error occured while establishing udp connection")
 		}
+		conn = cn
 	}
-	messageChannel := make(chan *LogEntry)
-	go func() {
-		defer func() {
-			log.Println("halting log message poller")
-			close(messageChannel)
-		}()
-	LongPoll:
-		for {
-			select {
-			case entry := <-messageChannel:
-				bytes := entry.Serialize()
-				_, err = conn.Write(bytes)
-				if err != nil {
-					fmt.Printf("error occured while transmitting log packet: %v", err)
-					break LongPoll
-				}
-			}
-		}
-	}()
-	return &LogService{
+	messageChannel := make(chan *LogEntry, 10)
+	go handleLogs(conn, messageChannel)
+	return LogService{
 		messageChannel: messageChannel,
 		LogWriter:      conn,
-		serviceContext: &serviceContext,
+		serviceContext: serviceContext,
+	}
+}
+
+func handleLogs(conn io.Writer, messageChannel chan *LogEntry) {
+	defer func() {
+		close(messageChannel)
+	}()
+LongPoll:
+	for {
+		select {
+		case entry := <-messageChannel:
+			_, err := conn.Write([]byte(entry.Serialize()))
+			if err != nil {
+				fmt.Printf("error occured while transmitting log packet")
+				break LongPoll
+			}
+		}
 	}
 }
 
@@ -83,18 +82,19 @@ type LogService struct {
 
 // NewContext provides high level structured information used to decorate
 // log messages, and exposes methods for writing at various log levels.
-func (ls *LogService) NewContext(site, operation string) *LogContext {
-	return &LogContext{
+func (ls *LogService) NewContext(site, operation string) LogContext {
+	return LogContext{
 		logService: ls,
 		Site:       site,
 		Operation:  operation,
 	}
 }
 
-func (ls *LogService) submitAsync(logContext *LogContext, logDetail *LogDetail) {
-	logDetail.Timestamp = time.Now().UTC().Format(time.RFC3339Nano)
+func (ls *LogService) submitAsync(sc *ServiceContext, lc *LogContext, ld *LogDetail) {
+	ld.Timestamp = time.Now().UTC().Format(time.RFC3339Nano)
 	ls.messageChannel <- &LogEntry{
-		LogContext: *logContext,
-		LogDetail:  *logDetail,
+		ServiceContext: *sc,
+		LogContext:     *lc,
+		LogDetail:      *ld,
 	}
 }

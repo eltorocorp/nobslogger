@@ -31,7 +31,9 @@ func newZapLogger(lvl zapcore.Level) *zap.Logger {
 	enc := zapcore.NewJSONEncoder(ec)
 	return zap.New(zapcore.NewCore(
 		enc,
-		&ztest.Discarder{},
+		&ztest.Discarder{
+			Syncer: ztest.Syncer{},
+		},
 		lvl,
 	))
 }
@@ -78,7 +80,7 @@ func fakeSugarFields() []interface{} {
 		field3Name, field3Value,
 		field4Name, field4Value,
 		field5Name, field5Value,
-		field6Name, field6Value,
-		field7Name, field7Value,
+		field5Name, field5Value,
+		field5Name, field5Value,
 	}
 }

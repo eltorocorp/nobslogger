@@ -106,7 +106,7 @@ func BenchmarkWithoutFields(b *testing.B) {
 		})
 	})
 	b.Run("eltorocorp/nobslogger.Info", func(b *testing.B) {
-		logService := nobslogger.Initialize("", nobslogger.ServiceContext{
+		logService := nobslogger.Initialize("", &nobslogger.ServiceContext{
 			Environment:       "",
 			SystemName:        "",
 			ServiceName:       "",
@@ -121,7 +121,7 @@ func BenchmarkWithoutFields(b *testing.B) {
 		})
 	})
 	b.Run("eltorocorp/nobslogger.InfoD", func(b *testing.B) {
-		logService := nobslogger.Initialize("", nobslogger.ServiceContext{
+		logService := nobslogger.Initialize("", &nobslogger.ServiceContext{
 			Environment:       "",
 			SystemName:        "",
 			ServiceName:       "",
@@ -225,7 +225,7 @@ func BenchmarkAccumulatedContext(b *testing.B) {
 		})
 	})
 	b.Run("eltorocorp/nobslogger.Info", func(b *testing.B) {
-		logService := nobslogger.Initialize("", nobslogger.ServiceContext{
+		logService := nobslogger.Initialize("", &nobslogger.ServiceContext{
 			Environment:       "",
 			SystemName:        "",
 			ServiceName:       "",
@@ -240,7 +240,7 @@ func BenchmarkAccumulatedContext(b *testing.B) {
 		})
 	})
 	b.Run("eltorocorp/nobslogger.InfoD", func(b *testing.B) {
-		logService := nobslogger.Initialize("", nobslogger.ServiceContext{
+		logService := nobslogger.Initialize("", &nobslogger.ServiceContext{
 			Environment:       "",
 			SystemName:        "",
 			ServiceName:       "",
@@ -344,7 +344,7 @@ func BenchmarkAddingFields(b *testing.B) {
 		})
 	})
 	b.Run("eltorocorp/nobslogger.Info", func(b *testing.B) {
-		logService := nobslogger.Initialize("", nobslogger.ServiceContext{
+		logService := nobslogger.Initialize("", &nobslogger.ServiceContext{
 			Environment:       field1Value,
 			SystemName:        field2Value,
 			ServiceName:       field3Value,
@@ -352,14 +352,14 @@ func BenchmarkAddingFields(b *testing.B) {
 		})
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
-			logger := logService.NewContext(field6Value, field7Value)
 			for pb.Next() {
+				logger := logService.NewContext(field6Value, field7Value)
 				logger.Info(getMessage(0))
 			}
 		})
 	})
 	b.Run("eltorocorp/nobslogger.InfoD", func(b *testing.B) {
-		logService := nobslogger.Initialize("", nobslogger.ServiceContext{
+		logService := nobslogger.Initialize("", &nobslogger.ServiceContext{
 			Environment:       field1Value,
 			SystemName:        field2Value,
 			ServiceName:       field3Value,
@@ -367,8 +367,8 @@ func BenchmarkAddingFields(b *testing.B) {
 		})
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
-			logger := logService.NewContext(field6Value, field7Value)
 			for pb.Next() {
+				logger := logService.NewContext(field6Value, field7Value)
 				logger.InfoD(getMessage(0), getMessage(1))
 			}
 		})
