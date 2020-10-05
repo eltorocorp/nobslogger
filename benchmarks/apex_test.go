@@ -21,5 +21,7 @@ func fakeApexFields() log.Fields {
 		field3Name: field3Value,
 		field4Name: field4Value,
 		field5Name: field5Value,
+		field6Name: field6Value,
+		field7Name: field7Value,
 	}
 }

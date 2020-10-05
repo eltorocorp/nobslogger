@@ -16,7 +16,9 @@ func fakeZerologFields(e *zerolog.Event) *zerolog.Event {
 		Str(field2Name, field2Value).
 		Str(field3Name, field3Value).
 		Str(field4Name, field4Value).
-		Str(field5Name, field5Value)
+		Str(field5Name, field5Value).
+		Str(field6Name, field6Value).
+		Str(field7Name, field7Value)
 }
 
 func fakeZerologContext(c zerolog.Context) zerolog.Context {
@@ -25,5 +27,7 @@ func fakeZerologContext(c zerolog.Context) zerolog.Context {
 		Str(field2Name, field2Value).
 		Str(field3Name, field3Value).
 		Str(field4Name, field4Value).
-		Str(field5Name, field5Value)
+		Str(field5Name, field5Value).
+		Str(field6Name, field6Value).
+		Str(field7Name, field7Value)
 }

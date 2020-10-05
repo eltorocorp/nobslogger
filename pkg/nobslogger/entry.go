@@ -14,10 +14,10 @@ type LogEntry struct {
 func (le *LogEntry) Serialize() []byte {
 	return []byte("{" +
 		"\"timestamp\":\"" + le.Timestamp + "\"," +
-		"\"environment\":\"" + le.logService.globalContext.Environment + "\"," +
-		"\"system_name\":\"" + le.logService.globalContext.SystemName + "\"," +
-		"\"service_name\":\"" + le.logService.globalContext.ServiceName + "\"," +
-		"\"service_instance_id\":\"" + le.logService.globalContext.ServiceInstanceID + "\"," +
+		"\"environment\":\"" + le.logService.serviceContext.Environment + "\"," +
+		"\"system_name\":\"" + le.logService.serviceContext.SystemName + "\"," +
+		"\"service_name\":\"" + le.logService.serviceContext.ServiceName + "\"," +
+		"\"service_instance_id\":\"" + le.logService.serviceContext.ServiceInstanceID + "\"," +
 		"\"level\":\"" + string(le.Level) + "\"," +
 		"\"severity\":\"" + string(le.Severity) + "\"," +
 		"\"site\":\"" + le.Site + "\"," +

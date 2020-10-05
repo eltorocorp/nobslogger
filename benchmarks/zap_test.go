@@ -51,6 +51,12 @@ const (
 
 	field5Name  = "timestamp"
 	field5Value = "2006-01-02T15:04:05.999999999Z07:00"
+
+	field6Name  = "site"
+	field6Value = "benchmark method"
+
+	field7Name  = "operation"
+	field7Value = "conducting benchmark"
 )
 
 func fakeFields() []zap.Field {
@@ -60,6 +66,8 @@ func fakeFields() []zap.Field {
 		zap.String(field3Name, field3Value),
 		zap.String(field4Name, field4Value),
 		zap.String(field5Name, field5Value),
+		zap.String(field6Name, field6Value),
+		zap.String(field7Name, field7Value),
 	}
 }
 
@@ -70,5 +78,7 @@ func fakeSugarFields() []interface{} {
 		field3Name, field3Value,
 		field4Name, field4Value,
 		field5Name, field5Value,
+		field6Name, field6Value,
+		field7Name, field7Value,
 	}
 }
