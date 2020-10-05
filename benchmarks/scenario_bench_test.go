@@ -226,12 +226,12 @@ func BenchmarkAccumulatedContext(b *testing.B) {
 	})
 	b.Run("eltorocorp/nobslogger.Info", func(b *testing.B) {
 		logService := nobslogger.Initialize("", &nobslogger.ServiceContext{
-			Environment:       "",
-			SystemName:        "",
-			ServiceName:       "",
-			ServiceInstanceID: "",
+			Environment:       field1Value,
+			SystemName:        field2Value,
+			ServiceName:       field3Value,
+			ServiceInstanceID: field4Value,
 		})
-		logger := logService.NewContext("", "")
+		logger := logService.NewContext(field6Value, field7Value)
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
@@ -241,12 +241,12 @@ func BenchmarkAccumulatedContext(b *testing.B) {
 	})
 	b.Run("eltorocorp/nobslogger.InfoD", func(b *testing.B) {
 		logService := nobslogger.Initialize("", &nobslogger.ServiceContext{
-			Environment:       "",
-			SystemName:        "",
-			ServiceName:       "",
-			ServiceInstanceID: "",
+			Environment:       field1Value,
+			SystemName:        field2Value,
+			ServiceName:       field3Value,
+			ServiceInstanceID: field4Value,
 		})
-		logger := logService.NewContext("", "")
+		logger := logService.NewContext(field6Value, field7Value)
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {

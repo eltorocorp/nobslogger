@@ -43,7 +43,7 @@ func Initialize(hostURI string, serviceContext *ServiceContext) LogService {
 		}
 		conn = cn
 	}
-	messageChannel := make(chan LogEntry)
+	messageChannel := make(chan LogEntry, 2)
 	go handleLogs(conn, messageChannel)
 	return LogService{
 		messageChannel: messageChannel,
