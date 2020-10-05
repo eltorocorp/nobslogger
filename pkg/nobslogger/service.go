@@ -90,11 +90,11 @@ func (ls *LogService) NewContext(site, operation string) LogContext {
 	}
 }
 
-func (ls *LogService) submitAsync(sc *ServiceContext, lc *LogContext, ld *LogDetail) {
+func (ls *LogService) submitAsync(sc ServiceContext, lc LogContext, ld LogDetail) {
 	ld.Timestamp = time.Now().UTC().Format(time.RFC3339Nano)
 	ls.messageChannel <- &LogEntry{
-		ServiceContext: *sc,
-		LogContext:     *lc,
-		LogDetail:      *ld,
+		ServiceContext: sc,
+		LogContext:     lc,
+		LogDetail:      ld,
 	}
 }

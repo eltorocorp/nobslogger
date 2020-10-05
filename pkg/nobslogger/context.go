@@ -18,7 +18,7 @@ type LogContext struct {
 
 // Trace logs the most granular information about system state.
 func (l *LogContext) Trace(message string) {
-	l.logService.submitAsync(l.logService.serviceContext, l, &LogDetail{
+	l.logService.submitAsync(*l.logService.serviceContext, *l, LogDetail{
 		Level:    LogLevelTrace,
 		Severity: LogSeverityTrace,
 		Message:  message,
@@ -28,7 +28,7 @@ func (l *LogContext) Trace(message string) {
 // TraceD logs the most granular about system state along with extra
 // detail.
 func (l *LogContext) TraceD(message, details string) {
-	l.logService.submitAsync(l.logService.serviceContext, l, &LogDetail{
+	l.logService.submitAsync(*l.logService.serviceContext, *l, LogDetail{
 		Level:    LogLevelTrace,
 		Severity: LogSeverityTrace,
 		Message:  message,
@@ -38,7 +38,7 @@ func (l *LogContext) TraceD(message, details string) {
 
 // Debug logs fairly graunlar information about system state.
 func (l *LogContext) Debug(message string) {
-	l.logService.submitAsync(l.logService.serviceContext, l, &LogDetail{
+	l.logService.submitAsync(*l.logService.serviceContext, *l, LogDetail{
 		Level:    LogLevelDebug,
 		Severity: LogSeverityDebug,
 		Message:  message,
@@ -48,7 +48,7 @@ func (l *LogContext) Debug(message string) {
 // DebugD logs relatively detailed information about system state along with
 // extra detail.
 func (l *LogContext) DebugD(message, details string) {
-	l.logService.submitAsync(l.logService.serviceContext, l, &LogDetail{
+	l.logService.submitAsync(*l.logService.serviceContext, *l, LogDetail{
 		Level:    LogLevelDebug,
 		Severity: LogSeverityDebug,
 		Message:  message,
@@ -58,7 +58,7 @@ func (l *LogContext) DebugD(message, details string) {
 
 // Info logs general informational messages useful for describing system state.
 func (l *LogContext) Info(message string) {
-	l.logService.submitAsync(l.logService.serviceContext, l, &LogDetail{
+	l.logService.submitAsync(*l.logService.serviceContext, *l, LogDetail{
 		Level:    LogLevelInfo,
 		Severity: LogSeverityInfo,
 		Message:  message,
@@ -68,7 +68,7 @@ func (l *LogContext) Info(message string) {
 // InfoD logs general informational messages useful for describing system state
 // along with extra detail.
 func (l *LogContext) InfoD(message, details string) {
-	l.logService.submitAsync(l.logService.serviceContext, l, &LogDetail{
+	l.logService.submitAsync(*l.logService.serviceContext, *l, LogDetail{
 		Level:    LogLevelInfo,
 		Severity: LogSeverityInfo,
 		Message:  message,
@@ -78,7 +78,7 @@ func (l *LogContext) InfoD(message, details string) {
 
 // Warn logs information about potentially harmful situations of interest.
 func (l *LogContext) Warn(message string) {
-	l.logService.submitAsync(l.logService.serviceContext, l, &LogDetail{
+	l.logService.submitAsync(*l.logService.serviceContext, *l, LogDetail{
 		Level:    LogLevelWarn,
 		Severity: LogSeverityWarn,
 		Message:  message,
@@ -88,7 +88,7 @@ func (l *LogContext) Warn(message string) {
 // WarnD logs information about potentially harmful situations of interest along
 // with extra detail.
 func (l *LogContext) WarnD(message, details string) {
-	l.logService.submitAsync(l.logService.serviceContext, l, &LogDetail{
+	l.logService.submitAsync(*l.logService.serviceContext, *l, LogDetail{
 		Level:    LogLevelWarn,
 		Severity: LogSeverityWarn,
 		Message:  message,
@@ -99,7 +99,7 @@ func (l *LogContext) WarnD(message, details string) {
 // Error logs events of considerable importance that will prevent normal program
 // execution, but might still allow the application to continue running.
 func (l *LogContext) Error(message string) {
-	l.logService.submitAsync(l.logService.serviceContext, l, &LogDetail{
+	l.logService.submitAsync(*l.logService.serviceContext, *l, LogDetail{
 		Level:    LogLevelError,
 		Severity: LogSeverityError,
 		Message:  message,
@@ -110,7 +110,7 @@ func (l *LogContext) Error(message string) {
 // execution, but might still allow the application to continue running along
 // with extra detail.
 func (l *LogContext) ErrorD(message, details string) {
-	l.logService.submitAsync(l.logService.serviceContext, l, &LogDetail{
+	l.logService.submitAsync(*l.logService.serviceContext, *l, LogDetail{
 		Level:    LogLevelError,
 		Severity: LogSeverityError,
 		Message:  message,
@@ -121,7 +121,7 @@ func (l *LogContext) ErrorD(message, details string) {
 // Fatal logs the most severe events. Fatal events are likely to have caused
 // a service to terminate.
 func (l *LogContext) Fatal(message string) {
-	l.logService.submitAsync(l.logService.serviceContext, l, &LogDetail{
+	l.logService.submitAsync(*l.logService.serviceContext, *l, LogDetail{
 		Level:    LogLevelFatal,
 		Severity: LogSeverityFatal,
 		Message:  message,
@@ -131,7 +131,7 @@ func (l *LogContext) Fatal(message string) {
 // FatalD logs the most severe events. Fatal events are likely to have caused
 // a service to terminate.
 func (l *LogContext) FatalD(message, details string) {
-	l.logService.submitAsync(l.logService.serviceContext, l, &LogDetail{
+	l.logService.submitAsync(*l.logService.serviceContext, *l, LogDetail{
 		Level:    LogLevelFatal,
 		Severity: LogSeverityFatal,
 		Message:  message,
