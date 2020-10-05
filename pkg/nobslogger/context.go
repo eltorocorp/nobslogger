@@ -4,11 +4,7 @@ package nobslogger
 // Information in LogContext is applicable to multiple log calls, and describe
 // the general environment in which a serious of related log calls will be made.
 type LogContext struct {
-	logService        *LogService
-	Environment       string
-	SystemName        string
-	ServiceName       string
-	ServiceInstanceID string
+	logService *LogService
 }
 
 // Trace logs the most detailed infomration about system state.

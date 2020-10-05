@@ -9,6 +9,13 @@ import (
 	"time"
 )
 
+type GlobalContext struct {
+	Environment       string
+	SystemName        string
+	ServiceName       string
+	ServiceInstanceID string
+}
+
 // Initialize establishes a connection to a specified UDP server (typically
 // logstash), starts an internal log message poller, and returns a LogService
 // instance through which a more detailed logging context can be established.
@@ -16,7 +23,7 @@ import (
 // to the UDP server.
 // Special case: If hostURI is supplied as an empty string, the logger will
 // run, but all log messages are sent to a "null writer" (see `ioutil.Discard`).
-func Initialize(hostURI string) *LogService {
+func Initialize(hostURI string, globalContext *GlobalContext) *LogService {
 	var conn io.Writer
 	var err error
 	if hostURI == "" {
@@ -49,6 +56,7 @@ func Initialize(hostURI string) *LogService {
 	return &LogService{
 		messageChannel: messageChannel,
 		LogWriter:      conn,
+		globalContext:  globalContext,
 	}
 }
 
@@ -59,17 +67,15 @@ type LogService struct {
 	// LogWriter is an io.Writer that is exposed to allow the standard library's
 	// logger to also transmit logs a la `log.SetOutput(logService.LogWriter)`.
 	LogWriter io.Writer
+
+	globalContext *GlobalContext
 }
 
 // NewContext provides high level structured information used to decorate
 // log messages, and exposes methods for writing at various log levels.
-func (ls *LogService) NewContext(environment, systemName, serviceName, serviceInstanceID string) *LogContext {
+func (ls *LogService) NewContext() *LogContext {
 	return &LogContext{
-		logService:        ls,
-		Environment:       environment,
-		SystemName:        systemName,
-		ServiceName:       serviceName,
-		ServiceInstanceID: serviceInstanceID,
+		logService: ls,
 	}
 }
 

@@ -11,14 +11,15 @@ type LogEntry struct {
 // no bullshit and really fast. This is less cute than using higher abstractions
 // but is also ~140 times faster than `json.MarshalIndent`, ~30 times faster
 // than `json.Marhsal`, and ~20 times faster than `fmt.Sprintf`.
-func (lp *LogEntry) Serialize() []byte {
+func (le *LogEntry) Serialize() []byte {
 	return []byte("{" +
-		"\"environment\":\"" + lp.Environment + "\"," +
-		"\"system_name\":\"" + lp.SystemName + "\"," +
-		"\"service_name\":\"" + lp.ServiceName + "\"," +
-		"\"service_instance_id\":\"" + lp.ServiceInstanceID + "\"," +
-		"\"log_level\":\"" + string(lp.Level) + "\"," +
-		"\"message\":\"" + lp.Message + "\"," +
-		"\"details\":\"" + lp.Details + "\"" +
+		"\"timestamp\":\"" + le.Timestamp + "\"," +
+		"\"environment\":\"" + le.logService.globalContext.Environment + "\"," +
+		"\"system_name\":\"" + le.logService.globalContext.SystemName + "\"," +
+		"\"service_name\":\"" + le.logService.globalContext.ServiceName + "\"," +
+		"\"service_instance_id\":\"" + le.logService.globalContext.ServiceInstanceID + "\"," +
+		"\"log_level\":\"" + string(le.Level) + "\"," +
+		"\"message\":\"" + le.Message + "\"," +
+		"\"details\":\"" + le.Details + "\"" +
 		"}")
 }
