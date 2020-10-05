@@ -6,12 +6,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func newDisabledLogrus() *logrus.Logger {
-	logger := newLogrus()
-	logger.Level = logrus.ErrorLevel
-	return logger
-}
-
 func newLogrus() *logrus.Logger {
 	return &logrus.Logger{
 		Out:       ioutil.Discard,
@@ -27,5 +21,6 @@ func fakeLogrusFields() logrus.Fields {
 		field2Name: field2Value,
 		field3Name: field3Value,
 		field4Name: field4Value,
+		field5Name: field5Value,
 	}
 }

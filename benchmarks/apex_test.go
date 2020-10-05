@@ -7,13 +7,6 @@ import (
 	"github.com/apex/log/handlers/json"
 )
 
-func newDisabledApexLog() *log.Logger {
-	return &log.Logger{
-		Handler: json.New(ioutil.Discard),
-		Level:   log.ErrorLevel,
-	}
-}
-
 func newApexLog() *log.Logger {
 	return &log.Logger{
 		Handler: json.New(ioutil.Discard),
@@ -27,5 +20,6 @@ func fakeApexFields() log.Fields {
 		field2Name: field2Value,
 		field3Name: field3Value,
 		field4Name: field4Value,
+		field5Name: field5Value,
 	}
 }

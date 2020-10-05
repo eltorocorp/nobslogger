@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"time"
 )
 
 // Initialize establishes a connection to a specified UDP server (typically
@@ -73,6 +74,7 @@ func (ls *LogService) NewContext(environment, systemName, serviceName, serviceIn
 }
 
 func (ls *LogService) submitAsync(logContext *LogContext, logDetail *LogDetail) {
+	logDetail.Timestamp = time.Now().UTC().Format(time.RFC3339Nano)
 	ls.messageChannel <- &LogEntry{
 		LogContext: *logContext,
 		LogDetail:  *logDetail,
