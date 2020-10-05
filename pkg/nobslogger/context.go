@@ -19,8 +19,9 @@ type LogContext struct {
 // Trace logs the most granular information about system state.
 func (l *LogContext) Trace(message string) {
 	l.logService.submitAsync(l, &LogDetail{
-		Level:   LogLevelTrace,
-		Message: message,
+		Level:    LogLevelTrace,
+		Severity: LogSeverityTrace,
+		Message:  message,
 	})
 }
 
@@ -28,17 +29,19 @@ func (l *LogContext) Trace(message string) {
 // detail.
 func (l *LogContext) TraceD(message, details string) {
 	l.logService.submitAsync(l, &LogDetail{
-		Level:   LogLevelTrace,
-		Message: message,
-		Details: details,
+		Level:    LogLevelTrace,
+		Severity: LogSeverityTrace,
+		Message:  message,
+		Details:  details,
 	})
 }
 
 // Debug logs fairly graunlar information about system state.
 func (l *LogContext) Debug(message string) {
 	l.logService.submitAsync(l, &LogDetail{
-		Level:   LogLevelTrace,
-		Message: message,
+		Level:    LogLevelDebug,
+		Severity: LogSeverityDebug,
+		Message:  message,
 	})
 }
 
@@ -46,17 +49,19 @@ func (l *LogContext) Debug(message string) {
 // extra detail.
 func (l *LogContext) DebugD(message, details string) {
 	l.logService.submitAsync(l, &LogDetail{
-		Level:   LogLevelTrace,
-		Message: message,
-		Details: details,
+		Level:    LogLevelDebug,
+		Severity: LogSeverityDebug,
+		Message:  message,
+		Details:  details,
 	})
 }
 
 // Info logs general informational messages useful for describing system state.
 func (l *LogContext) Info(message string) {
 	l.logService.submitAsync(l, &LogDetail{
-		Level:   LogLevelInfo,
-		Message: message,
+		Level:    LogLevelInfo,
+		Severity: LogSeverityInfo,
+		Message:  message,
 	})
 }
 
@@ -64,17 +69,19 @@ func (l *LogContext) Info(message string) {
 // along with extra detail.
 func (l *LogContext) InfoD(message, details string) {
 	l.logService.submitAsync(l, &LogDetail{
-		Level:   LogLevelInfo,
-		Message: message,
-		Details: details,
+		Level:    LogLevelInfo,
+		Severity: LogSeverityInfo,
+		Message:  message,
+		Details:  details,
 	})
 }
 
 // Warn logs information about potentially harmful situations of interest.
 func (l *LogContext) Warn(message string) {
 	l.logService.submitAsync(l, &LogDetail{
-		Level:   LogLevelWarn,
-		Message: message,
+		Level:    LogLevelWarn,
+		Severity: LogSeverityWarn,
+		Message:  message,
 	})
 }
 
@@ -82,9 +89,10 @@ func (l *LogContext) Warn(message string) {
 // with extra detail.
 func (l *LogContext) WarnD(message, details string) {
 	l.logService.submitAsync(l, &LogDetail{
-		Level:   LogLevelWarn,
-		Message: message,
-		Details: details,
+		Level:    LogLevelWarn,
+		Severity: LogSeverityWarn,
+		Message:  message,
+		Details:  details,
 	})
 }
 
@@ -92,8 +100,9 @@ func (l *LogContext) WarnD(message, details string) {
 // execution, but might still allow the application to continue running.
 func (l *LogContext) Error(message string) {
 	l.logService.submitAsync(l, &LogDetail{
-		Level:   LogLevelError,
-		Message: message,
+		Level:    LogLevelError,
+		Severity: LogSeverityError,
+		Message:  message,
 	})
 }
 
@@ -102,9 +111,10 @@ func (l *LogContext) Error(message string) {
 // with extra detail.
 func (l *LogContext) ErrorD(message, details string) {
 	l.logService.submitAsync(l, &LogDetail{
-		Level:   LogLevelError,
-		Message: message,
-		Details: details,
+		Level:    LogLevelError,
+		Severity: LogSeverityError,
+		Message:  message,
+		Details:  details,
 	})
 }
 
@@ -112,8 +122,9 @@ func (l *LogContext) ErrorD(message, details string) {
 // a service to terminate.
 func (l *LogContext) Fatal(message string) {
 	l.logService.submitAsync(l, &LogDetail{
-		Level:   LogLevelFatal,
-		Message: message,
+		Level:    LogLevelFatal,
+		Severity: LogSeverityFatal,
+		Message:  message,
 	})
 }
 
@@ -121,8 +132,9 @@ func (l *LogContext) Fatal(message string) {
 // a service to terminate.
 func (l *LogContext) FatalD(message, details string) {
 	l.logService.submitAsync(l, &LogDetail{
-		Level:   LogLevelFatal,
-		Message: message,
-		Details: details,
+		Level:    LogLevelFatal,
+		Severity: LogSeverityFatal,
+		Message:  message,
+		Details:  details,
 	})
 }
