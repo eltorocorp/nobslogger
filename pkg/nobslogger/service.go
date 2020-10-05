@@ -43,7 +43,7 @@ func Initialize(hostURI string, serviceContext *ServiceContext) LogService {
 		}
 		conn = cn
 	}
-	messageChannel := make(chan *LogEntry, 10)
+	messageChannel := make(chan LogEntry)
 	go handleLogs(conn, messageChannel)
 	return LogService{
 		messageChannel: messageChannel,
@@ -52,7 +52,7 @@ func Initialize(hostURI string, serviceContext *ServiceContext) LogService {
 	}
 }
 
-func handleLogs(conn io.Writer, messageChannel chan *LogEntry) {
+func handleLogs(conn io.Writer, messageChannel chan LogEntry) {
 	defer func() {
 		close(messageChannel)
 	}()
@@ -71,7 +71,7 @@ LongPoll:
 
 // LogService provides access to an upstream UDP log server (such as LogStash).
 type LogService struct {
-	messageChannel chan *LogEntry
+	messageChannel chan LogEntry
 
 	// LogWriter is an io.Writer that is exposed to allow the standard library's
 	// logger to also transmit logs a la `log.SetOutput(logService.LogWriter)`.
@@ -92,7 +92,7 @@ func (ls *LogService) NewContext(site, operation string) LogContext {
 
 func (ls *LogService) submitAsync(sc ServiceContext, lc LogContext, ld LogDetail) {
 	ld.Timestamp = time.Now().UTC().Format(time.RFC3339Nano)
-	ls.messageChannel <- &LogEntry{
+	ls.messageChannel <- LogEntry{
 		ServiceContext: sc,
 		LogContext:     lc,
 		LogDetail:      ld,
