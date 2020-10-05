@@ -18,7 +18,9 @@ func (le *LogEntry) Serialize() []byte {
 		"\"system_name\":\"" + le.logService.globalContext.SystemName + "\"," +
 		"\"service_name\":\"" + le.logService.globalContext.ServiceName + "\"," +
 		"\"service_instance_id\":\"" + le.logService.globalContext.ServiceInstanceID + "\"," +
-		"\"log_level\":\"" + string(le.Level) + "\"," +
+		"\"level\":\"" + string(le.Level) + "\"," +
+		"\"site\":\"" + le.Site + "\"," +
+		"\"operation\":\"" + le.Operation + "\"," +
 		"\"message\":\"" + le.Message + "\"," +
 		"\"details\":\"" + le.Details + "\"" +
 		"}")

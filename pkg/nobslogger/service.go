@@ -9,10 +9,20 @@ import (
 	"time"
 )
 
+// GlobalContext defines structural log elements that are applied to every
+// log entry from this log service instance.
 type GlobalContext struct {
+	// Environment, i.e. dev, stage, prod, etc.
 	Environment       string
+
+	// The name of the system at large which this service acts within.
 	SystemName        string
+
+	// The name of this particular service.
 	ServiceName       string
+
+	// An ID that defines this service instance uniquely from other instances
+	// of the same service within this system and environment.
 	ServiceInstanceID string
 }
 
@@ -23,7 +33,7 @@ type GlobalContext struct {
 // to the UDP server.
 // Special case: If hostURI is supplied as an empty string, the logger will
 // run, but all log messages are sent to a "null writer" (see `ioutil.Discard`).
-func Initialize(hostURI string, globalContext *GlobalContext) *LogService {
+func Initialize(hostURI string, globalContext GlobalContext) *LogService {
 	var conn io.Writer
 	var err error
 	if hostURI == "" {
@@ -56,7 +66,7 @@ func Initialize(hostURI string, globalContext *GlobalContext) *LogService {
 	return &LogService{
 		messageChannel: messageChannel,
 		LogWriter:      conn,
-		globalContext:  globalContext,
+		globalContext:  &globalContext,
 	}
 }
 
@@ -73,9 +83,11 @@ type LogService struct {
 
 // NewContext provides high level structured information used to decorate
 // log messages, and exposes methods for writing at various log levels.
-func (ls *LogService) NewContext() *LogContext {
+func (ls *LogService) NewContext(site, operation string) *LogContext {
 	return &LogContext{
 		logService: ls,
+		Site: site,
+		Operation: operation
 	}
 }
 
