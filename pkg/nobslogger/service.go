@@ -45,26 +45,45 @@ func Initialize(hostURI string, serviceContext *ServiceContext) LogService {
 		conn = cn
 	}
 	messageChannel := make(chan LogEntry, 2)
-	go handleLogs(conn, messageChannel)
-	return LogService{
+	ls := LogService{
 		messageChannel: messageChannel,
 		LogWriter:      conn,
 		serviceContext: serviceContext,
 	}
+	go ls.handleLogs(conn, messageChannel)
+	return ls
 }
 
-func handleLogs(conn io.Writer, messageChannel chan LogEntry) {
+func (ls *LogService) handleLogs(conn io.Writer, messageChannel chan LogEntry) {
 	defer func() {
 		close(messageChannel)
 	}()
-LongPoll:
 	for {
 		select {
 		case entry := <-messageChannel:
 			_, err := conn.Write(entry.Serialize())
 			if err != nil {
-				fmt.Printf("error occured while transmitting log packet")
-				break LongPoll
+				// since this error occured while trying to ship a log, we
+				// immediately try to transmit a notification of the situation
+				// to the host (rather than queueing this response via the
+				// message channel)
+				_, err = conn.Write(LogEntry{
+					ServiceContext: *ls.serviceContext,
+					LogContext: LogContext{
+						Site:      "log service",
+						Operation: "handleLogs",
+					},
+					LogDetail: LogDetail{
+						Level:     LogLevelError,
+						Severity:  LogSeverityError,
+						Message:   "error occured while shipping log data",
+						Details:   err.Error(),
+						Timestamp: strconv.FormatInt(time.Now().UTC().UnixNano(), 10),
+					},
+				}.Serialize())
+				if err != nil {
+					fmt.Println(err.Error())
+				}
 			}
 		}
 	}

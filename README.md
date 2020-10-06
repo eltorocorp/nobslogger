@@ -1,5 +1,7 @@
 # :cow: NobSlogger
-NobSlogger. A fast, lightweight no-BS static-structured/leveled logger.
+NobSlogger. A fast, lightweight, no-BS, static-structured/leveled logger.
+
+> NobSlogger is currently pre-release, and its API should be considered unstable.
 
 No BS:
  - NobSlogger primarily integrates with logstash via UDP, but it can push logs anywhere that supports a UDP protocol. Maybe this will change in the future if I feel like dealing with more BS.

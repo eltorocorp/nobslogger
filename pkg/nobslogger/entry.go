@@ -11,7 +11,7 @@ const (
 	braceOpenToken         = "{"
 	braceCloseToken        = "}"
 	fieldOpenToken         = ":\""
-	fieldCloseToken        = "\""
+	fieldCloseToken        = "\","
 	timestampToken         = "\"timestamp\""
 	environmentToken       = "\"environment\""
 	systemNameToken        = "\"system_name\""
@@ -30,7 +30,7 @@ const (
 // no bullshit and really fast. This is less cute than using higher abstractions
 // but is also ~140 times faster than `json.MarshalIndent`, ~30 times faster
 // than `json.Marhsal`, and ~20 times faster than `fmt.Sprintf`.
-func (le *LogEntry) Serialize() []byte {
+func (le LogEntry) Serialize() []byte {
 	return []byte(braceOpenToken +
 		timestampToken + fieldOpenToken + le.Timestamp + fieldCloseToken +
 		environmentToken + fieldOpenToken + le.Environment + fieldCloseToken +
