@@ -1,9 +1,7 @@
-# :cow: nobslogger
-NobSlogger. A fast, lightweight no BS structured/leveled logger.
+# :cow: NobSlogger
+NobSlogger. A fast, lightweight no BS static-structured/leveled logger.
 
 # Installation
-
-**!** *nobSlogger is currently in beta and should be considered unstable*
 
 `go get -u github.com/eltorocorp/nobslogger`
 
@@ -11,15 +9,26 @@ NobSlogger. A fast, lightweight no BS structured/leveled logger.
 
 The basics
 ```go
-logService:= nobslogger.Initialize("logstash.theclouds.com:1234")
-logger:= logService.NewContext("production", "grib-app", "foo-service", "instance 12abc")
-logger.Fatal("system is borked", "details about the bork")
+loggerSvc := nobslogger.Initialize("logstash.theclouds.com:1234", &nobslogger.ServiceContext{
+    Environment:       "dev",
+    ServiceInstanceID: "123456789",
+    SystemName:        "grib-app",
+    ServiceName:       "foo-service",
+})
+logger := loggerSvc.NewContext("entrypoint", "initializing service")
+logger.Info("starting up")
 ```
 
-Capturing stdlib.log 
+Hook into stdlib/log 
 ```go
-logService:= nobslogger.Initialize("logstash.theclouds.com:1234")
-logger:= logService.NewContext("production", "grib-app", "foo-service", "instance 12abc")
+loggerSvc := nobslogger.Initialize("logstash.theclouds.com:1234", &nobslogger.ServiceContext{
+    Environment:       "dev",
+    ServiceInstanceID: "123456789",
+    SystemName:        "grib-app",
+    ServiceName:       "foo-service",
+})
+logger := loggerSvc.NewContext("entrypoint", "initializing service")
+logger.Info("starting up")
 
 log.SetOutput(logService.LogWriter)
 log.Println("this is forwarded to logstash along with the other structured logs")
@@ -29,20 +38,30 @@ logger.Fatal("system is borked", "details about the bork")
 
 Multiple logging contexts
 ```go
-logService:= nobslogger.Initialize("logstash.theclouds.com:1234")
+loggerSvc := nobslogger.Initialize("logstash.theclouds.com:1234", &nobslogger.ServiceContext{
+    Environment:       "dev",
+    ServiceInstanceID: "123456789",
+    SystemName:        "grib-app",
+    ServiceName:       "foo-service",
+})
 
 logger1:= logService.NewContext("production", "grib-app", "foo-service", "instance 1")
-logger1.Info("Logger 1", "this message was generated from the logger1 context")
+logger1.InfoD("Logger 1", "this message was generated from the logger1 context")
 
 logger2:= logService.NewContext("production", "grib-app", "foo-service", "instance 2")
-logger2.Info("Logger 2", "this message was generated from the logger2 context")
-
+logger2.InfoD("Logger 2", "this message was generated from the logger2 context")
 ```
 
 Working across goroutines
 ```go
-logService:= nobslogger.Initialize("logstash.theclouds.com:1234")
-logger:= logService.NewContext("production", "grib-app", "foo-service", "instance 12abc")
+loggerSvc := nobslogger.Initialize("logstash.theclouds.com:1234", &nobslogger.ServiceContext{
+    Environment:       "dev",
+    ServiceInstanceID: "123456789",
+    SystemName:        "grib-app",
+    ServiceName:       "foo-service",
+})
+
+logger := loggerSvc.NewContext("first logger", "this is one of two loggers we'll establish")
 
 go func() {
     logger.Debug("This is on one goroutine", "details!")
@@ -59,8 +78,6 @@ go func() {
 ```
 
 # Performance
-
-## Accumulated Context
 
 | Package                               | Time         |  Time % to nobSlogger | Objects Allocated |
 |---------------------------------------|--------------|-----------------------|-------------------|
