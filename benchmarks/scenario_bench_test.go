@@ -106,7 +106,7 @@ func BenchmarkWithoutFields(b *testing.B) {
 		})
 	})
 	b.Run("eltorocorp/nobslogger.Info", func(b *testing.B) {
-		logService := nobslogger.Initialize("", &nobslogger.ServiceContext{
+		logService := nobslogger.InitializeWriter(ioutil.Discard, &nobslogger.ServiceContext{
 			Environment:       "",
 			SystemName:        "",
 			ServiceName:       "",
@@ -121,7 +121,7 @@ func BenchmarkWithoutFields(b *testing.B) {
 		})
 	})
 	b.Run("eltorocorp/nobslogger.InfoD", func(b *testing.B) {
-		logService := nobslogger.Initialize("", &nobslogger.ServiceContext{
+		logService := nobslogger.InitializeWriter(ioutil.Discard, &nobslogger.ServiceContext{
 			Environment:       "",
 			SystemName:        "",
 			ServiceName:       "",
@@ -225,7 +225,7 @@ func BenchmarkAccumulatedContext(b *testing.B) {
 		})
 	})
 	b.Run("eltorocorp/nobslogger.Info", func(b *testing.B) {
-		logService := nobslogger.Initialize("", &nobslogger.ServiceContext{
+		logService := nobslogger.InitializeWriter(ioutil.Discard, &nobslogger.ServiceContext{
 			Environment:       field1Value,
 			SystemName:        field2Value,
 			ServiceName:       field3Value,
@@ -240,7 +240,7 @@ func BenchmarkAccumulatedContext(b *testing.B) {
 		})
 	})
 	b.Run("eltorocorp/nobslogger.InfoD", func(b *testing.B) {
-		logService := nobslogger.Initialize("", &nobslogger.ServiceContext{
+		logService := nobslogger.InitializeWriter(ioutil.Discard, &nobslogger.ServiceContext{
 			Environment:       field1Value,
 			SystemName:        field2Value,
 			ServiceName:       field3Value,
@@ -344,7 +344,7 @@ func BenchmarkAddingFields(b *testing.B) {
 		})
 	})
 	b.Run("eltorocorp/nobslogger.Info", func(b *testing.B) {
-		logService := nobslogger.Initialize("", &nobslogger.ServiceContext{
+		logService := nobslogger.InitializeWriter(ioutil.Discard, &nobslogger.ServiceContext{
 			Environment:       field1Value,
 			SystemName:        field2Value,
 			ServiceName:       field3Value,
@@ -359,7 +359,7 @@ func BenchmarkAddingFields(b *testing.B) {
 		})
 	})
 	b.Run("eltorocorp/nobslogger.InfoD", func(b *testing.B) {
-		logService := nobslogger.Initialize("", &nobslogger.ServiceContext{
+		logService := nobslogger.InitializeWriter(ioutil.Discard, &nobslogger.ServiceContext{
 			Environment:       field1Value,
 			SystemName:        field2Value,
 			ServiceName:       field3Value,

@@ -9,7 +9,6 @@ NobSlogger. A fast, lightweight, no-BS, static-structured/leveled logger.
 > NobSlogger is currently pre-release, and its API should be considered unstable.
 
 No BS:
- - NobSlogger primarily integrates with logstash via UDP, but it can push logs anywhere that supports a UDP protocol. Maybe this will change in the future if I feel like dealing with more BS.
  - NobSlogger doesn't try to bend to everybody's idea of what should be logged and how it should be structured.
  - It has a staticly structured log format that is focused on use for microservice activity logs.
  - It is focused on providing structured information that helps identify what is happening, where it is happening, and in what order it is happening, so that issues can be identified quickly.
@@ -22,7 +21,7 @@ No BS:
 
 # Performance
 
-NobSlogger is really opinionated. And it is fast as a result\*.
+NobSlogger is very opinionated. And it is fast as a result\*.
 | Package                               | Time         |  Time % to nobSlogger | Objects Allocated |
 |---------------------------------------|--------------|-----------------------|-------------------|
 | :cow: eltorocorp/nobslogger.Info-4    | 3456 ns/op   | +0%                   | 3 allocs/op       |
@@ -72,7 +71,7 @@ Each structural level presents progressively more detail about the context withi
 
 The basics
 ```go
-loggerSvc := nobslogger.Initialize("logstash.theclouds.com:1234", &nobslogger.ServiceContext{
+loggerSvc := nobslogger.InitializeUDP("logstash.theclouds.com:1234", &nobslogger.ServiceContext{
     Environment:       "dev",
     ServiceInstanceID: "123456789",
     SystemName:        "grib-app",
@@ -84,7 +83,7 @@ logger.Info("starting up")
 
 Hook into stdlib/log 
 ```go
-loggerSvc := nobslogger.Initialize("logstash.theclouds.com:1234", &nobslogger.ServiceContext{
+loggerSvc := nobslogger.InitializeUDP("logstash.theclouds.com:1234", &nobslogger.ServiceContext{
     Environment:       "dev",
     ServiceInstanceID: "123456789",
     SystemName:        "grib-app",
@@ -101,7 +100,7 @@ logger.FatalD("system is borked", "details about the bork")
 
 Multiple logging contexts
 ```go
-loggerSvc := nobslogger.Initialize("logstash.theclouds.com:1234", &nobslogger.ServiceContext{
+loggerSvc := nobslogger.InitializeUDP("logstash.theclouds.com:1234", &nobslogger.ServiceContext{
     Environment:       "dev",
     ServiceInstanceID: "123456789",
     SystemName:        "grib-app",
@@ -117,7 +116,7 @@ logger2.InfoD("Logger 2", "this message was generated from the logger2 context")
 
 Working across goroutines
 ```go
-loggerSvc := nobslogger.Initialize("logstash.theclouds.com:1234", &nobslogger.ServiceContext{
+loggerSvc := nobslogger.InitializeUDP("logstash.theclouds.com:1234", &nobslogger.ServiceContext{
     Environment:       "dev",
     ServiceInstanceID: "123456789",
     SystemName:        "grib-app",

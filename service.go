@@ -3,7 +3,6 @@ package nobslogger
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"strconv"
 	"time"
@@ -26,44 +25,41 @@ type ServiceContext struct {
 	ServiceInstanceID string
 }
 
-// Initialize establishes a connection to a specified UDP server (typically
+// InitializeUDP establishes a connection to a specified UDP server (typically
 // logstash), starts an internal log message poller, and returns a LogService
 // instance through which a more detailed logging context can be established.
 // This function will panic if an error occurs while establishing the connection
 // to the UDP server.
-// Special case: If hostURI is supplied as an empty string, the logger will
-// run, but all log messages are sent to a "null writer" (see `ioutil.Discard`).
-func Initialize(hostURI string, serviceContext *ServiceContext) LogService {
-	var conn io.Writer
-	if hostURI == "" {
-		conn = ioutil.Discard
-	} else {
-		cn, err := net.Dial("udp", hostURI)
-		if err != nil {
-			panic("error occurred while establishing udp connection")
-		}
-		conn = cn
+func InitializeUDP(hostURI string, serviceContext *ServiceContext) LogService {
+	cn, err := net.Dial("udp", hostURI)
+	if err != nil {
+		panic("error occurred while establishing udp connection")
 	}
+	return InitializeWriter(cn, serviceContext)
+}
+
+// InitializeWriter publishes logs via the provider io.Writer.
+func InitializeWriter(w io.Writer, serviceContext *ServiceContext) LogService {
 	messageChannel := make(chan LogEntry, 2)
 	ls := LogService{
 		messageChannel: messageChannel,
-		LogWriter:      conn,
+		LogWriter:      w,
 		serviceContext: serviceContext,
 	}
-	go ls.handleLogs(conn, messageChannel)
+	go ls.handleLogs()
 	return ls
 }
 
-func (ls *LogService) handleLogs(conn io.Writer, messageChannel chan LogEntry) {
+func (ls *LogService) handleLogs() {
 	defer func() {
-		close(messageChannel)
+		close(ls.messageChannel)
 	}()
 	for {
 		select {
-		case entry := <-messageChannel:
-			_, err := conn.Write(entry.Serialize())
+		case entry := <-ls.messageChannel:
+			_, err := ls.LogWriter.Write(entry.Serialize())
 			if err != nil {
-				_, err = conn.Write(LogEntry{
+				_, err = ls.LogWriter.Write(LogEntry{
 					ServiceContext: *ls.serviceContext,
 					LogContext: LogContext{
 						Site:      "log service",

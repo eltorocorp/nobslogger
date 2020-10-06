@@ -1,13 +1,14 @@
 package nobslogger_test
 
 import (
+	"io/ioutil"
 	"testing"
 
-	"github.com/eltorocorp/nobslogger/pkg/nobslogger"
+	"github.com/eltorocorp/nobslogger"
 )
 
 func Test_ServiceInitialize(t *testing.T) {
-	loggerService := nobslogger.Initialize("", &nobslogger.ServiceContext{})
+	loggerService := nobslogger.InitializeWriter(ioutil.Discard, &nobslogger.ServiceContext{})
 	log := loggerService.NewContext("context site", "operation")
 	log.Info("message")
 }
