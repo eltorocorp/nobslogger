@@ -1,6 +1,10 @@
 # :cow: NobSlogger
 NobSlogger. A fast, lightweight, no-BS, static-structured/leveled logger.
 
+[![godoc](http://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/eltorocorp/nobslogger)
+[![Go Report Card](https://goreportcard.com/badge/github.com/eltorocorp/nobslogger)](https://goreportcard.com/report/github.com/eltorocorp/nobslogger)
+[![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/eltorocorp/nobslogger/master/LICENSE)
+
 > NobSlogger is currently pre-release, and its API should be considered unstable.
 
 No BS:
