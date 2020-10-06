@@ -50,7 +50,7 @@ Each structural level presents progressively more detail about the context withi
 *Values applied in a more narrow context. Typically within a package, or other "sub-module" within a service.*
 
 - Site: *The general region to which logs for the current context apply.*
-- Operation *The general operation being performed within this region of the system."
+- Operation *The general operation being performed within this region of the system.*
 
 ## Log Entry Level
 *Values that are specific to a discrete log entry.*
@@ -101,10 +101,10 @@ loggerSvc := nobslogger.Initialize("logstash.theclouds.com:1234", &nobslogger.Se
     ServiceName:       "foo-service",
 })
 
-logger1:= logService.NewContext("production", "grib-app", "foo-service", "instance 1")
+logger1:= logService.NewContext("log context 1", "doing work within context 1")
 logger1.InfoD("Logger 1", "this message was generated from the logger1 context")
 
-logger2:= logService.NewContext("production", "grib-app", "foo-service", "instance 2")
+logger2:= logService.NewContext("log context 2", "doing work within context 2")
 logger2.InfoD("Logger 2", "this message was generated from the logger2 context")
 ```
 
@@ -117,7 +117,7 @@ loggerSvc := nobslogger.Initialize("logstash.theclouds.com:1234", &nobslogger.Se
     ServiceName:       "foo-service",
 })
 
-logger := loggerSvc.NewContext("first logger", "this is one of two loggers we'll establish")
+logger := loggerSvc.NewContext("first logger", "this is one of two log contexts we'll establish")
 
 go func() {
     logger.DebugD("This is on one goroutine", "details!")
@@ -128,8 +128,8 @@ go func() {
 }()
 
 go func() {
-    newLoggerContext:= logService.NewContext("production", "grib-app", "foo-service", "instance 3")
-    newLoggerContext.Warn("Whoa, this is from a different context.", "Crazy details")
+    newLoggerContext:= logService.NewContext("second logger", "this is the second of two log contexts.")
+    newLoggerContext.WarnD("Whoa, this is from a different context.", "Crazy details")
 }()
 ```
 
