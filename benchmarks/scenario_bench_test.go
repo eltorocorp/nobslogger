@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/eltorocorp/nobslogger/pkg/nobslogger"
+	"github.com/eltorocorp/nobslogger"
 	"go.uber.org/zap"
 )
 
