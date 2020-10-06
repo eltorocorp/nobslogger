@@ -40,7 +40,7 @@ func Initialize(hostURI string, serviceContext *ServiceContext) LogService {
 	} else {
 		cn, err := net.Dial("udp", hostURI)
 		if err != nil {
-			panic("error occured while establishing udp connection")
+			panic("error occurred while establishing udp connection")
 		}
 		conn = cn
 	}
@@ -63,10 +63,6 @@ func (ls *LogService) handleLogs(conn io.Writer, messageChannel chan LogEntry) {
 		case entry := <-messageChannel:
 			_, err := conn.Write(entry.Serialize())
 			if err != nil {
-				// since this error occured while trying to ship a log, we
-				// immediately try to transmit a notification of the situation
-				// to the host (rather than queueing this response via the
-				// message channel)
 				_, err = conn.Write(LogEntry{
 					ServiceContext: *ls.serviceContext,
 					LogContext: LogContext{
@@ -76,7 +72,7 @@ func (ls *LogService) handleLogs(conn io.Writer, messageChannel chan LogEntry) {
 					LogDetail: LogDetail{
 						Level:     LogLevelError,
 						Severity:  LogSeverityError,
-						Message:   "error occured while shipping log data",
+						Message:   "error occurred while shipping log data",
 						Details:   err.Error(),
 						Timestamp: strconv.FormatInt(time.Now().UTC().UnixNano(), 10),
 					},
