@@ -14,12 +14,14 @@ const (
 	// buffer size.
 	messageChannelBufferSize = 10
 
-	// The default maximum consecutive flush attempts the cancellation process
-	// will attempt before winding down a LogService. (see Cancel)
+	// DefaultMaxFlushAttempts defines the maximum consecutive flush attempts
+	// the cancellation process will attempt before winding down a LogService.
+	// (see Cancel)
 	DefaultMaxFlushAttempts = 10
 
-	// The default amount of time (in milliseconds) to wait  between flush
-	// attempts during a cancellation. (see Cancel)
+	// DefaultMsBetweenFlushAttempts defines minimum amount of time (in
+	// milliseconds) to wait between flush attempts during a cancellation.
+	// (see Cancel)
 	DefaultMsBetweenFlushAttempts = 10
 )
 
@@ -144,9 +146,11 @@ func (ls *LogService) flushPendingMessages() {
 }
 
 func (ls *LogService) writeEntry(entry LogEntry) {
-	_, err := ls.LogWriter.Write(entry.Serialize())
+	entryBytes := entry.Serialize()
+	_, err := ls.LogWriter.Write(entryBytes)
 	if err != nil {
-		_, err = ls.LogWriter.Write(LogEntry{
+		stdErr := log.New(os.Stderr, "", 0)
+		errLogEntry := LogEntry{
 			ServiceContext: *ls.serviceContext,
 			LogContext: LogContext{
 				Site:      "log service",
@@ -159,8 +163,11 @@ func (ls *LogService) writeEntry(entry LogEntry) {
 				Details:   err.Error(),
 				Timestamp: strconv.FormatInt(time.Now().UTC().UnixNano(), 10),
 			},
-		}.Serialize())
+		}.Serialize()
+		stdErr.Println(string(entryBytes))
+		_, err = ls.LogWriter.Write(errLogEntry)
 		if err != nil {
+			stdErr.Println(string(errLogEntry))
 			log.New(os.Stderr, "", 0).Println(err.Error())
 		}
 	}
@@ -203,7 +210,7 @@ func (ls *LogService) submitAsync(sc ServiceContext, lc LogContext, ld LogDetail
 // system is quiet (and presumably no longer initiating new log messages via any
 // spawned LogContexts). If any LogContext's continue to send log messages to
 // the LogService after Cancel is called, the LogService will either never halt
-// or may halt before all messages are processed. Note that the Done method
+// or may halt before all messages are processed. Note that the Wait method
 // will always block unless Cancel is called, and will continue to block until
 // the cancellation process (as described above) is finalized.
 func (ls *LogService) Cancel() {
@@ -218,8 +225,8 @@ func (ls *LogService) CancelWithOptions(maxFlushAttempts, msBetweenFlushAttempts
 	ls.Cancel()
 }
 
-// Done blocks until Cancel is called and all logs in LogService's internal
+// Wait blocks until Cancel is called and all logs in LogService's internal
 // queue have been flushed.
-func (ls *LogService) Done() {
+func (ls *LogService) Wait() {
 	<-ls.doneChannel
 }
