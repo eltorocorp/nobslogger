@@ -6,7 +6,6 @@ import (
 	"net"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 )
 
@@ -41,14 +40,11 @@ type LogServiceOptions struct {
 // LogService provides access to a writer such as that for a file system or an
 // upstream UDP endpoint.
 type LogService struct {
-	mu                       *sync.Mutex
-	messageChannel           chan LogEntry
-	cancelChannel            chan struct{}
-	doneChannel              chan struct{}
-	serviceContext           *ServiceContext
-	maxFlushAttempts         int
-	timeBetweenFlushAttempts time.Duration
-	logServiceOptions        LogServiceOptions
+	messageChannel chan LogEntry
+	cancelChannel  chan struct{}
+	doneChannel    chan struct{}
+	serviceContext *ServiceContext
+	options        LogServiceOptions
 
 	// LogWriter is an io.Writer that is exposed to allow the standard library's
 	// logger to also transmit logs a la `log.SetOutput(logService.LogWriter)`.
@@ -97,13 +93,12 @@ func InitializeWriter(w io.Writer, serviceContext *ServiceContext, options LogSe
 	doneChannel := make(chan struct{}, 1)
 
 	ls := LogService{
-		mu:                new(sync.Mutex),
-		messageChannel:    messageChannel,
-		cancelChannel:     cancelChannel,
-		doneChannel:       doneChannel,
-		serviceContext:    serviceContext,
-		logServiceOptions: options,
-		LogWriter:         w,
+		messageChannel: messageChannel,
+		cancelChannel:  cancelChannel,
+		doneChannel:    doneChannel,
+		serviceContext: serviceContext,
+		options:        options,
+		LogWriter:      w,
 	}
 
 	go func() {
@@ -127,17 +122,17 @@ func (ls *LogService) initiateMessagePoll() {
 }
 
 func (ls *LogService) flushPendingMessages() {
-	remainingFlushAttempts := ls.logServiceOptions.MaxFlushAttempts
+	remainingFlushAttempts := ls.options.MaxFlushAttempts
 	for {
 		select {
 		case entry := <-ls.messageChannel:
-			remainingFlushAttempts = ls.logServiceOptions.MaxFlushAttempts
+			remainingFlushAttempts = ls.options.MaxFlushAttempts
 			ls.writeEntry(entry)
 		default:
-			if remainingFlushAttempts == 0 || int64(ls.logServiceOptions.TimeBetweenFlushAttempts) == 0 {
+			if remainingFlushAttempts == 0 || int64(ls.options.TimeBetweenFlushAttempts) == 0 {
 				return
 			}
-			time.Sleep(ls.logServiceOptions.TimeBetweenFlushAttempts)
+			time.Sleep(ls.options.TimeBetweenFlushAttempts)
 			remainingFlushAttempts--
 		}
 	}
@@ -145,9 +140,7 @@ func (ls *LogService) flushPendingMessages() {
 
 func (ls *LogService) writeEntry(entry LogEntry) {
 	entryBytes := entry.Serialize()
-	ls.mu.Lock()
 	_, err := ls.LogWriter.Write(entryBytes)
-	ls.mu.Unlock()
 	if err != nil {
 		stdErr := log.New(os.Stderr, "", 0)
 		errLogEntry := LogEntry{
@@ -165,9 +158,7 @@ func (ls *LogService) writeEntry(entry LogEntry) {
 			},
 		}.Serialize()
 		stdErr.Println(string(entryBytes))
-		ls.mu.Lock()
 		_, err = ls.LogWriter.Write(errLogEntry)
-		ls.mu.Unlock()
 		if err != nil {
 			stdErr.Println(string(errLogEntry))
 			log.New(os.Stderr, "", 0).Println(err.Error())
