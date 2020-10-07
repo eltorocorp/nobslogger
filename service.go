@@ -32,9 +32,23 @@ type ServiceContext struct {
 	ServiceInstanceID string
 }
 
+// LogServiceOptions exposes configuration settings for LogService behavior.
 type LogServiceOptions struct {
-	MaxFlushAttempts         int
+	// MaxFlushAttempts is the maximum number of times that the LogService will
+	// try to flush its queue before finalizing a cancellation request.
+	MaxFlushAttempts int
+
+	// TimeBetweenFlushAttempts is the amount of time the LogService will wait
+	// for new inbound messages to arrive in its queue before deciding that the
+	// queue is empty and finalizing the a cancellation request.
 	TimeBetweenFlushAttempts time.Duration
+}
+
+func defaultLogServiceOptions() LogServiceOptions {
+	return LogServiceOptions{
+		MaxFlushAttempts:         10,
+		TimeBetweenFlushAttempts: 10 * time.Millisecond,
+	}
 }
 
 // LogService provides access to a writer such as that for a file system or an
@@ -75,19 +89,31 @@ type LogService struct {
 // system might receive a partial log message. As such, it is recommended that
 // the destination service be running a json codec that is able to identify
 // and flag if/when an inbound message is incomplete.
-func InitializeUDP(hostURI string, serviceContext *ServiceContext, options LogServiceOptions) LogService {
+func InitializeUDP(hostURI string, serviceContext ServiceContext) LogService {
+	return InitializeUDPWithOptions(hostURI, serviceContext, defaultLogServiceOptions())
+}
+
+// InitializeUDPWithOptions is the samme as InitializeUDP, but with custom
+// LogServiceOptions supplied. See InitializeUDP.
+func InitializeUDPWithOptions(hostURI string, serviceContext ServiceContext, options LogServiceOptions) LogService {
 	cn, err := net.Dial("udp", hostURI)
 	if err != nil {
 		panic("error occurred while establishing udp connection")
 	}
-	return InitializeWriter(cn, serviceContext, options)
+	return InitializeWriterWithOptions(cn, serviceContext, options)
 }
 
 // InitializeWriter publishes logs via the provided io.Writer.
 //
 // InitializeWriter initiates a long-poll operation that transmits log messages
 // to the specified writer any time a log message is available to write.
-func InitializeWriter(w io.Writer, serviceContext *ServiceContext, options LogServiceOptions) LogService {
+func InitializeWriter(writer io.Writer, serviceContext ServiceContext) LogService {
+	return InitializeWriterWithOptions(writer, serviceContext, defaultLogServiceOptions())
+}
+
+// InitializeWriterWithOptions is the same as InitializeWriter, but with custom
+// LogServiceOptions supplied. See InitializeWriter.
+func InitializeWriterWithOptions(w io.Writer, serviceContext ServiceContext, options LogServiceOptions) LogService {
 	messageChannel := make(chan LogEntry, messageChannelBufferSize)
 	cancelChannel := make(chan struct{}, 1)
 	doneChannel := make(chan struct{}, 1)
@@ -96,7 +122,7 @@ func InitializeWriter(w io.Writer, serviceContext *ServiceContext, options LogSe
 		messageChannel: messageChannel,
 		cancelChannel:  cancelChannel,
 		doneChannel:    doneChannel,
-		serviceContext: serviceContext,
+		serviceContext: &serviceContext,
 		options:        options,
 		LogWriter:      w,
 	}

@@ -22,7 +22,7 @@ func Test_ServiceInitializeWriterHappyPath(t *testing.T) {
 	writer := mock_io.NewMockWriter(ctrl)
 	writer.EXPECT().Write(gomock.Any()).Return(0, nil).Times(1)
 
-	loggerService := nobslogger.InitializeWriter(writer, &nobslogger.ServiceContext{}, nobslogger.LogServiceOptions{})
+	loggerService := nobslogger.InitializeWriterWithOptions(writer, nobslogger.ServiceContext{}, nobslogger.LogServiceOptions{})
 	logger := loggerService.NewContext("context site", "operation")
 	logger.Info("some info")
 	loggerService.Cancel()
@@ -39,7 +39,7 @@ func Test_ServiceInitializeWriterPersistentError(t *testing.T) {
 		Return(0, fmt.Errorf("test error")).
 		Times(2)
 
-	loggerService := nobslogger.InitializeWriter(writer, &nobslogger.ServiceContext{}, nobslogger.LogServiceOptions{})
+	loggerService := nobslogger.InitializeWriterWithOptions(writer, nobslogger.ServiceContext{}, nobslogger.LogServiceOptions{})
 	logger := loggerService.NewContext("context site", "operation")
 	logger.Info("message")
 	loggerService.Cancel()
