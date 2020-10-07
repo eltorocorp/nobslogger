@@ -1,6 +1,7 @@
 package nobslogger_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/eltorocorp/nobslogger"
@@ -9,10 +10,14 @@ import (
 )
 
 func Test_ServiceInitializeWriterHappyPath(t *testing.T) {
+	// Important: Avoid making assertions about the expected input value for
+	// writer.Write in this test. gomock would evaluate this on a separate
+	// goroutine, and if the assertion fails on a separate goroutine, the test
+	// will either hang indefinitely or timeout without a clear failure mode.
+	// Ask me how I know.
+	// Instead, test the LogEntry.Serialize method directly.
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-
-	// expectedMsg := `"timestamp":"1602046435294762000","environment":"","system_name":"","service_name":"","service_instance_id":"","level":"300","severity":"info","site":"context site","operation":"operation","message":"some info","details":"",}`
 
 	writer := mock_io.NewMockWriter(ctrl)
 	writer.EXPECT().Write(gomock.Any()).Return(0, nil).Times(1)
@@ -24,22 +29,22 @@ func Test_ServiceInitializeWriterHappyPath(t *testing.T) {
 	loggerService.Wait()
 }
 
-// func Test_ServiceInitializeWriterPersistentError(t *testing.T) {
-// 	ctrl := gomock.NewController(t)
-// 	defer ctrl.Finish()
+func Test_ServiceInitializeWriterPersistentError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-// 	writer := mock_io.NewMockWriter(ctrl)
-// 	writer.EXPECT().
-// 		Write(gomock.Any()).
-// 		Return(0, fmt.Errorf("test error")).
-// 		Times(2)
+	writer := mock_io.NewMockWriter(ctrl)
+	writer.EXPECT().
+		Write(gomock.Any()).
+		Return(0, fmt.Errorf("test error")).
+		Times(2)
 
-// 	loggerService := nobslogger.InitializeWriter(writer, &nobslogger.ServiceContext{})
-// 	logger := loggerService.NewContext("context site", "operation")
-// 	logger.Info("message")
-// 	loggerService.Cancel()
-// 	loggerService.Wait()
-// }
+	loggerService := nobslogger.InitializeWriter(writer, &nobslogger.ServiceContext{}, nobslogger.LogServiceOptions{})
+	logger := loggerService.NewContext("context site", "operation")
+	logger.Info("message")
+	loggerService.Cancel()
+	loggerService.Wait()
+}
 
 // Tests
 // At least one happy path test confirming output format
