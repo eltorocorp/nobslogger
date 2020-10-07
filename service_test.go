@@ -46,11 +46,6 @@ func Test_ServiceInitializeWriterPersistentError(t *testing.T) {
 	loggerService.Wait()
 }
 
-// Tests
-// At least one happy path test confirming output format
-// A singlur error condition
-// a persistent error condition
-
 // Examples
 // Recreate examples from readme (just with a fake UDP client)
 // Use of cancel and wait methods

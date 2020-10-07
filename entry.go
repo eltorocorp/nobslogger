@@ -12,6 +12,7 @@ const (
 	braceCloseToken        = "}"
 	fieldOpenToken         = ":\""
 	fieldCloseToken        = "\","
+	finalFieldCloseToken   = "\""
 	timestampToken         = "\"timestamp\""
 	environmentToken       = "\"environment\""
 	systemNameToken        = "\"system_name\""
@@ -37,11 +38,11 @@ func (le LogEntry) Serialize() []byte {
 		systemNameToken + fieldOpenToken + le.SystemName + fieldCloseToken +
 		serviceNameToken + fieldOpenToken + le.ServiceName + fieldCloseToken +
 		serviceInstanceIDToken + fieldOpenToken + le.ServiceInstanceID + fieldCloseToken +
-		levelToken + fieldOpenToken + string(le.Level) + fieldCloseToken +
-		severityToken + fieldOpenToken + string(le.Severity) + fieldCloseToken +
 		siteToken + fieldOpenToken + le.Site + fieldCloseToken +
 		operationToken + fieldOpenToken + le.Operation + fieldCloseToken +
+		levelToken + fieldOpenToken + string(le.Level) + fieldCloseToken +
+		severityToken + fieldOpenToken + string(le.Severity) + fieldCloseToken +
 		messageToken + fieldOpenToken + le.Message + fieldCloseToken +
-		detailsToken + fieldOpenToken + le.Details + fieldCloseToken +
+		detailsToken + fieldOpenToken + le.Details + finalFieldCloseToken +
 		braceCloseToken)
 }
