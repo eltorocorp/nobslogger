@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -13,16 +14,6 @@ const (
 	// Run benchmarks to verify performance gains before altering messageChannel
 	// buffer size.
 	messageChannelBufferSize = 10
-
-	// DefaultMaxFlushAttempts defines the maximum consecutive flush attempts
-	// the cancellation process will attempt before winding down a LogService.
-	// (see Cancel)
-	DefaultMaxFlushAttempts = 10
-
-	// DefaultMsBetweenFlushAttempts defines minimum amount of time (in
-	// milliseconds) to wait between flush attempts during a cancellation.
-	// (see Cancel)
-	DefaultMsBetweenFlushAttempts = 10
 )
 
 // ServiceContext defines structural log elements that are applied to every
@@ -42,15 +33,22 @@ type ServiceContext struct {
 	ServiceInstanceID string
 }
 
+type LogServiceOptions struct {
+	MaxFlushAttempts         int
+	TimeBetweenFlushAttempts time.Duration
+}
+
 // LogService provides access to a writer such as that for a file system or an
 // upstream UDP endpoint.
 type LogService struct {
-	messageChannel         chan LogEntry
-	cancelChannel          chan struct{}
-	doneChannel            chan struct{}
-	serviceContext         *ServiceContext
-	maxFlushAttempts       int
-	msBetweenFlushAttempts int
+	mu                       *sync.Mutex
+	messageChannel           chan LogEntry
+	cancelChannel            chan struct{}
+	doneChannel              chan struct{}
+	serviceContext           *ServiceContext
+	maxFlushAttempts         int
+	timeBetweenFlushAttempts time.Duration
+	logServiceOptions        LogServiceOptions
 
 	// LogWriter is an io.Writer that is exposed to allow the standard library's
 	// logger to also transmit logs a la `log.SetOutput(logService.LogWriter)`.
@@ -81,31 +79,31 @@ type LogService struct {
 // system might receive a partial log message. As such, it is recommended that
 // the destination service be running a json codec that is able to identify
 // and flag if/when an inbound message is incomplete.
-func InitializeUDP(hostURI string, serviceContext *ServiceContext) LogService {
+func InitializeUDP(hostURI string, serviceContext *ServiceContext, options LogServiceOptions) LogService {
 	cn, err := net.Dial("udp", hostURI)
 	if err != nil {
 		panic("error occurred while establishing udp connection")
 	}
-	return InitializeWriter(cn, serviceContext)
+	return InitializeWriter(cn, serviceContext, options)
 }
 
 // InitializeWriter publishes logs via the provided io.Writer.
 //
 // InitializeWriter initiates a long-poll operation that transmits log messages
 // to the specified writer any time a log message is available to write.
-func InitializeWriter(w io.Writer, serviceContext *ServiceContext) LogService {
+func InitializeWriter(w io.Writer, serviceContext *ServiceContext, options LogServiceOptions) LogService {
 	messageChannel := make(chan LogEntry, messageChannelBufferSize)
 	cancelChannel := make(chan struct{}, 1)
 	doneChannel := make(chan struct{}, 1)
 
 	ls := LogService{
-		messageChannel:         messageChannel,
-		cancelChannel:          cancelChannel,
-		doneChannel:            doneChannel,
-		serviceContext:         serviceContext,
-		maxFlushAttempts:       DefaultMaxFlushAttempts,
-		msBetweenFlushAttempts: DefaultMsBetweenFlushAttempts,
-		LogWriter:              w,
+		mu:                new(sync.Mutex),
+		messageChannel:    messageChannel,
+		cancelChannel:     cancelChannel,
+		doneChannel:       doneChannel,
+		serviceContext:    serviceContext,
+		logServiceOptions: options,
+		LogWriter:         w,
 	}
 
 	go func() {
@@ -129,25 +127,27 @@ func (ls *LogService) initiateMessagePoll() {
 }
 
 func (ls *LogService) flushPendingMessages() {
-	flushAttempts := DefaultMaxFlushAttempts
+	remainingFlushAttempts := ls.logServiceOptions.MaxFlushAttempts
 	for {
 		select {
 		case entry := <-ls.messageChannel:
-			flushAttempts = DefaultMaxFlushAttempts
+			remainingFlushAttempts = ls.logServiceOptions.MaxFlushAttempts
 			ls.writeEntry(entry)
 		default:
-			if flushAttempts == 0 {
+			if remainingFlushAttempts == 0 || int64(ls.logServiceOptions.TimeBetweenFlushAttempts) == 0 {
 				return
 			}
-			time.Sleep(DefaultMsBetweenFlushAttempts)
-			flushAttempts--
+			time.Sleep(ls.logServiceOptions.TimeBetweenFlushAttempts)
+			remainingFlushAttempts--
 		}
 	}
 }
 
 func (ls *LogService) writeEntry(entry LogEntry) {
 	entryBytes := entry.Serialize()
+	ls.mu.Lock()
 	_, err := ls.LogWriter.Write(entryBytes)
+	ls.mu.Unlock()
 	if err != nil {
 		stdErr := log.New(os.Stderr, "", 0)
 		errLogEntry := LogEntry{
@@ -165,7 +165,9 @@ func (ls *LogService) writeEntry(entry LogEntry) {
 			},
 		}.Serialize()
 		stdErr.Println(string(entryBytes))
+		ls.mu.Lock()
 		_, err = ls.LogWriter.Write(errLogEntry)
+		ls.mu.Unlock()
 		if err != nil {
 			stdErr.Println(string(errLogEntry))
 			log.New(os.Stderr, "", 0).Println(err.Error())
@@ -199,12 +201,6 @@ func (ls *LogService) submitAsync(sc ServiceContext, lc LogContext, ld LogDetail
 //
 // Calling cancel more than once has no additional effect.
 //
-// As soon as a cancellation request is received, LogService will begin flushing
-// the message queue. A flush is attempted once every DefaultMsBetweenFlushes
-// milliseconds, until the number of consecutive fruitless attempts exceeds
-// DefaultMaxFlushAttempts. These default values can be overridden by calling
-// the CancelWithOptions method instead of Cancel.
-//
 // Note that it is the host system's responsibility to gracefully
 // wind down operations. The host system must call Cancel AFTER the host
 // system is quiet (and presumably no longer initiating new log messages via any
@@ -215,14 +211,6 @@ func (ls *LogService) submitAsync(sc ServiceContext, lc LogContext, ld LogDetail
 // the cancellation process (as described above) is finalized.
 func (ls *LogService) Cancel() {
 	ls.cancelChannel <- struct{}{}
-}
-
-// CancelWithOptions is the same as Cancel, but with more control over internal
-// flush behavior (see Cancel).
-func (ls *LogService) CancelWithOptions(maxFlushAttempts, msBetweenFlushAttempts uint) {
-	ls.maxFlushAttempts = int(maxFlushAttempts)
-	ls.msBetweenFlushAttempts = int(msBetweenFlushAttempts)
-	ls.Cancel()
 }
 
 // Wait blocks until Cancel is called and all logs in LogService's internal

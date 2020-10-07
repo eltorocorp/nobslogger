@@ -1,25 +1,45 @@
 package nobslogger_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/eltorocorp/nobslogger"
+	"github.com/eltorocorp/nobslogger/mocks/mock_io"
+	"github.com/golang/mock/gomock"
 )
 
-type fmtWriter struct{}
+func Test_ServiceInitializeWriterHappyPath(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-func (*fmtWriter) Write(bb []byte) (int, error) {
-	return 0, fmt.Errorf("test error")
-}
+	// expectedMsg := `"timestamp":"1602046435294762000","environment":"","system_name":"","service_name":"","service_instance_id":"","level":"300","severity":"info","site":"context site","operation":"operation","message":"some info","details":"",}`
 
-func Test_ServiceInitialize(t *testing.T) {
-	loggerService := nobslogger.InitializeWriter(new(fmtWriter), &nobslogger.ServiceContext{})
+	writer := mock_io.NewMockWriter(ctrl)
+	writer.EXPECT().Write(gomock.Any()).Return(0, nil).Times(1)
+
+	loggerService := nobslogger.InitializeWriter(writer, &nobslogger.ServiceContext{}, nobslogger.LogServiceOptions{})
 	logger := loggerService.NewContext("context site", "operation")
-	logger.Info("message")
+	logger.Info("some info")
 	loggerService.Cancel()
-	loggerService.Done()
+	loggerService.Wait()
 }
+
+// func Test_ServiceInitializeWriterPersistentError(t *testing.T) {
+// 	ctrl := gomock.NewController(t)
+// 	defer ctrl.Finish()
+
+// 	writer := mock_io.NewMockWriter(ctrl)
+// 	writer.EXPECT().
+// 		Write(gomock.Any()).
+// 		Return(0, fmt.Errorf("test error")).
+// 		Times(2)
+
+// 	loggerService := nobslogger.InitializeWriter(writer, &nobslogger.ServiceContext{})
+// 	logger := loggerService.NewContext("context site", "operation")
+// 	logger.Info("message")
+// 	loggerService.Cancel()
+// 	loggerService.Wait()
+// }
 
 // Tests
 // At least one happy path test confirming output format
