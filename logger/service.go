@@ -59,10 +59,7 @@ type LogService struct {
 	doneChannel    chan struct{}
 	serviceContext *ServiceContext
 	options        LogServiceOptions
-
-	// LogWriter is an io.Writer that is exposed to allow the standard library's
-	// logger to also transmit logs a la `log.SetOutput(logService.LogWriter)`.
-	LogWriter io.Writer
+	logWriter      io.Writer
 }
 
 // InitializeUDP establishes a connection to a specified UDP server (such as
@@ -126,7 +123,7 @@ func InitializeWriterWithOptions(w io.Writer, serviceContext ServiceContext, opt
 		doneChannel:    doneChannel,
 		serviceContext: &serviceContext,
 		options:        options,
-		LogWriter:      w,
+		logWriter:      w,
 	}
 
 	go func() {
@@ -168,7 +165,7 @@ func (ls *LogService) flushPendingMessages() {
 
 func (ls *LogService) writeEntry(entry LogEntry) {
 	entryBytes := entry.Serialize()
-	_, err := ls.LogWriter.Write(entryBytes)
+	_, err := ls.logWriter.Write(entryBytes)
 	if err != nil {
 		stdErr := log.New(os.Stderr, "", 0)
 		errLogEntry := LogEntry{
@@ -186,7 +183,7 @@ func (ls *LogService) writeEntry(entry LogEntry) {
 			},
 		}.Serialize()
 		stdErr.Println(string(entryBytes))
-		_, err = ls.LogWriter.Write(errLogEntry)
+		_, err = ls.logWriter.Write(errLogEntry)
 		if err != nil {
 			stdErr.Println(string(errLogEntry))
 			stdErr.Println(err.Error())

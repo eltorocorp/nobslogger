@@ -138,3 +138,12 @@ func (l *LogContext) FatalD(message, details string) {
 		Details:  details,
 	})
 }
+
+// Write enables this context to be used as an io.Writer.
+// Messages sent via the Write method are interpretted as Trace level events.
+// The content of messages is not parsed, and is merely forwarded to the
+// LogContext.Trace method as a blob.
+func (l LogContext) Write(message []byte) (int, error) {
+	l.Trace(string(message))
+	return len(message), nil
+}

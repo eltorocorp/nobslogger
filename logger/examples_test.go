@@ -2,6 +2,7 @@ package logger_test
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"time"
 
@@ -148,4 +149,32 @@ func ExampleLogService_variousContextMethods() {
 
 	loggerSvc.Cancel()
 	loggerSvc.Wait()
+}
+
+// LogContexts also support the io.Writer interface, so they can be used to
+// hook into any external writer, such as through the use of `log.SetOutput`.
+func ExampleLogContext_Write() {
+	serviceContext := logger.ServiceContext{
+		Environment:       "test",
+		SystemName:        "examples",
+		ServiceName:       "example runner",
+		ServiceInstanceID: "1",
+	}
+	loggerSvc := logger.InitializeWriter(new(fakeWriter), serviceContext)
+	logger := loggerSvc.NewContext("ExampleLogContext", "Write")
+
+	// Here we simulate hooking the LogContext into the an existing std/logger.
+	// In this example we create a new logger via `log.New`, the this could also
+	// be done using `log.SetOutput`.
+	stdlibLogger := log.New(logger, "", 0)
+
+	// When we call Println, the current LogContext will log the message at the
+	// Trace level.
+	stdlibLogger.Println("Hello from the standard library logger!")
+
+	loggerSvc.Cancel()
+	loggerSvc.Wait()
+
+	// Output: {"timestamp":"1234567890123456789","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"ExampleLogContext","operation":"Write","level":"100","severity":"trace","message":"Hello from the standard library logger!
+	//","details":""}
 }
