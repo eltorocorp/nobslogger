@@ -4,7 +4,7 @@ NobSlogger. A fast, opinionated, lightweight, no-BS, static-structured/leveled l
 [![godoc](http://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/eltorocorp/nobslogger)
 [![Go Report Card](https://goreportcard.com/badge/github.com/eltorocorp/nobslogger)](https://goreportcard.com/report/github.com/eltorocorp/nobslogger)
 [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/eltorocorp/nobslogger/master/LICENSE)
-[![Coverage](http://gocover.io/_badge/github.com/rs/zerolog)](http://gocover.io/github.com/eltorocorp/nobslogger)
+[![Coverage](http://gocover.io/_badge/github.com/eltorocorp/nobslogger/logger)](http://gocover.io/github.com/eltorocorp/nobslogger/logger)
 
 No BS:
  - NobSlogger doesn't try to bend to everybody's idea of what should be logged and how it should be structured.
