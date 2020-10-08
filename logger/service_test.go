@@ -2,8 +2,8 @@ package logger_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
+	"time"
 
 	"github.com/eltorocorp/nobslogger/logger"
 	"github.com/eltorocorp/nobslogger/mocks/mock_io"
@@ -11,12 +11,6 @@ import (
 )
 
 func Test_ServiceInitializeWriterHappyPath(t *testing.T) {
-	// Important: Avoid making assertions about the expected input value for
-	// writer.Write in this test. gomock would evaluate this on a separate
-	// goroutine, and if the assertion fails on a separate goroutine, the test
-	// will either hang indefinitely or timeout without a clear failure mode.
-	// Ask me how I know.
-	// Instead, test the LogEntry.Serialize method directly.
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -47,19 +41,14 @@ func Test_ServiceInitializeWriterPersistentError(t *testing.T) {
 	loggerService.Wait()
 }
 
-// The LogService should support ingestion of logs from LogContexts on different
+// The LogService must support ingestion of logs from LogContexts on different
 // goroutines.
 func Test_LogServiceSupportsMultipleContexts(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	w := func(bb []byte) (int, error) {
-		re := regexp.MustCompile(`\d{19}`)
-		msg := re.ReplaceAllString(string(bb), "1234567890123456789")
-		return len(msg), nil
-	}
 	writer := mock_io.NewMockWriter(ctrl)
-	writer.EXPECT().Write(gomock.Any()).DoAndReturn(w).Times(2)
+	writer.EXPECT().Write(gomock.Any()).Return(0, nil).Times(2)
 
 	serviceContext := logger.ServiceContext{}
 	loggerSvc := logger.InitializeWriter(writer, serviceContext)
@@ -75,5 +64,35 @@ func Test_LogServiceSupportsMultipleContexts(t *testing.T) {
 	}()
 
 	loggerSvc.Cancel()
+	loggerSvc.Wait()
+}
+
+// The LogService must support cancellation from a separate goroutine.
+func Test_LogServiceSupportsCancellationFromSeparateGoroutine(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	writer := mock_io.NewMockWriter(ctrl)
+	writer.EXPECT().Write(gomock.Any()).Return(0, nil).Times(3)
+
+	serviceContext := logger.ServiceContext{}
+	loggerSvc := logger.InitializeWriter(writer, serviceContext)
+
+	logger := loggerSvc.NewContext("n/a", "n/a")
+
+	go func() {
+		logger.Warn("extremely long operation")
+		time.Sleep(24 * 365.25 * time.Hour)
+	}()
+
+	go func() {
+		logger.Info("logging")
+	}()
+
+	go func() {
+		logger.Info("cancelling")
+		loggerSvc.Cancel()
+	}()
+
 	loggerSvc.Wait()
 }
