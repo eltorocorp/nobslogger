@@ -69,4 +69,5 @@ Each structural level presents progressively more detail about the context withi
 
 # Examples
 
-- See runnable examples [here](/logger/examples_test.go)
+- view examples in the docs [here](https://pkg.go.dev/github.com/eltorocorp/nobslogger/logger#pkg-examples)
+- or view the same examples in code [here](/logger/examples_test.go)
