@@ -10,6 +10,8 @@ import (
 
 type fakeWriter struct{}
 
+// Write just replaces the timestamp internally assigned by the LogService
+// with a constant value so the tests remain deterministic.
 func (fakeWriter) Write(message []byte) (int, error) {
 	re := regexp.MustCompile(`\d{19}`)
 	msg := re.ReplaceAllString(string(message), "1234567890123456789")
@@ -17,37 +19,39 @@ func (fakeWriter) Write(message []byte) (int, error) {
 	return len(msg), nil
 }
 
-func ExampleLogService_basicInitialization() {
+func ExampleLogService_InitializeWriter() {
+	// Establish a ServiceContext.
+	// This records the highest level information about the system being logged.
 	serviceContext := logger.ServiceContext{
 		Environment:       "test",
 		SystemName:        "examples",
 		ServiceName:       "example runner",
 		ServiceInstanceID: "1",
 	}
+
+	// Initialize the LogService.
 	loggerSvc := logger.InitializeWriter(new(fakeWriter), serviceContext)
+
+	// Get a new logger (LogContext) from the LogService.
 	logger := loggerSvc.NewContext("ExampleInitializeWriter_ServiceContext", "running example")
+
+	// Log something.
 	logger.Info("Here is some info")
+
+	// Calling Cancel signals to the LogService to begin flushing the internal
+	// log queue.
 	loggerSvc.Cancel()
+
+	// Wait always blocks while the LogService is active, and will only unblock
+	// after the Cancel method has been called and has finished flusing the
+	// log message queue.
 	loggerSvc.Wait()
+
 	// Output: {"timestamp":"1234567890123456789","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"ExampleInitializeWriter_ServiceContext","operation":"running example","level":"300","severity":"info","message":"Here is some info","details":""}
 }
 
-func ExampleLogService_newContext() {
-	serviceContext := logger.ServiceContext{
-		Environment:       "test",
-		SystemName:        "examples",
-		ServiceName:       "example runner",
-		ServiceInstanceID: "1",
-	}
-	loggerSvc := logger.InitializeWriter(new(fakeWriter), serviceContext)
-
-	logger := loggerSvc.NewContext("ExampleInitializeWriter_ServiceContext", "running example")
-	logger.Info("Here is some info")
-	loggerSvc.Cancel()
-	loggerSvc.Wait()
-	// Output: {"timestamp":"1234567890123456789","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"ExampleInitializeWriter_ServiceContext","operation":"running example","level":"300","severity":"info","message":"Here is some info","details":""}
-}
-
+// LogService supports having multiple logging contexts that may be initialized
+// from separate goroutines.
 func ExampleLogService_multipleContexts() {
 	serviceContext := logger.ServiceContext{
 		Environment:       "test",
@@ -71,6 +75,8 @@ func ExampleLogService_multipleContexts() {
 	loggerSvc.Wait()
 }
 
+// LogService supports having a one (or more) log contexts span multiple
+// goroutines.
 func ExampleLogService_contextAcrossGoroutines() {
 	serviceContext := logger.ServiceContext{
 		Environment:       "test",
@@ -95,6 +101,8 @@ func ExampleLogService_contextAcrossGoroutines() {
 	loggerSvc.Wait()
 }
 
+// LogService supports cancellation from a separate goroutine from where the
+// service was originally initialized.
 func ExampleLogService_cancelFromSeparateGoroutine() {
 	serviceContext := logger.ServiceContext{
 		Environment:       "test",
@@ -120,6 +128,8 @@ func ExampleLogService_cancelFromSeparateGoroutine() {
 	loggerSvc.Wait()
 }
 
+// LogService contexts support a vartiety of log methods, including, but not
+// limmitted to those shown in this example.
 func ExampleLogService_variousContextMethods() {
 	serviceContext := logger.ServiceContext{
 		Environment:       "test",
