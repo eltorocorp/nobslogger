@@ -10,10 +10,10 @@ package main
 //   GODEBUG=allocfreetrace=1 ./main 2> allocfreetrace.txt
 //	 vim allocfreetrace.txt
 
-import "github.com/eltorocorp/nobslogger/pkg/nobslogger"
+import "github.com/eltorocorp/nobslogger/logger"
 
 func main() {
-	loggerSvc := nobslogger.Initialize("", &nobslogger.ServiceContext{
+	loggerSvc := logger.Initialize("", &logger.ServiceContext{
 		Environment:       "dev",
 		ServiceInstanceID: "123456789",
 		ServiceName:       "allocation_catcher",

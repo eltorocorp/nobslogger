@@ -1,10 +1,10 @@
-package nobslogger_test
+package logger_test
 
 import (
 	"fmt"
 	"regexp"
 
-	"github.com/eltorocorp/nobslogger"
+	"github.com/eltorocorp/nobslogger/logger"
 )
 
 type fakeWriter struct{}
@@ -16,14 +16,14 @@ func (fakeWriter) Write(message []byte) (int, error) {
 	return len(msg), nil
 }
 
-func ExampleInitializeWriter_ServiceContext() {
-	serviceContext := nobslogger.ServiceContext{
+func ExampleInitializeWriter() {
+	serviceContext := logger.ServiceContext{
 		Environment:       "test",
 		SystemName:        "examples",
 		ServiceName:       "example runner",
 		ServiceInstanceID: "1",
 	}
-	loggerSvc := nobslogger.InitializeWriter(new(fakeWriter), serviceContext)
+	loggerSvc := logger.InitializeWriter(new(fakeWriter), serviceContext)
 	logger := loggerSvc.NewContext("ExampleInitializeWriter_ServiceContext", "running example")
 	logger.Info("Here is some info")
 	loggerSvc.Cancel()

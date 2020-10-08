@@ -1,4 +1,4 @@
-package nobslogger
+package logger
 
 // LogContext defines high level information for a structured log entry.
 // Information in LogContext is applicable to multiple log calls, and describe

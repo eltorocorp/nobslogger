@@ -1,4 +1,4 @@
-package nobslogger
+package logger
 
 import (
 	"io"
@@ -73,7 +73,7 @@ type LogService struct {
 // This function will panic if an error occurs while establishing the connection
 // to the UDP server.
 //
-// NobSlogger does not make any attempts at UDP MTU discovery, and will not
+// logger does not make any attempts at UDP MTU discovery, and will not
 // prohibit the host system from attempting to send log messages that exceed
 // the network's UDP MTU limit. If this limit is exceeded, one of two things
 // may occur:

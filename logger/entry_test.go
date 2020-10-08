@@ -1,27 +1,27 @@
-package nobslogger_test
+package logger_test
 
 import (
 	"testing"
 
-	"github.com/eltorocorp/nobslogger"
+	"github.com/eltorocorp/nobslogger/logger"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestLogEntrySerialize(t *testing.T) {
-	logEntry := nobslogger.LogEntry{
-		ServiceContext: nobslogger.ServiceContext{
+	logEntry := logger.LogEntry{
+		ServiceContext: logger.ServiceContext{
 			Environment:       "env",
 			SystemName:        "sys",
 			ServiceName:       "srn",
 			ServiceInstanceID: "sid",
 		},
-		LogContext: nobslogger.LogContext{
+		LogContext: logger.LogContext{
 			Site:      "sit",
 			Operation: "opn",
 		},
-		LogDetail: nobslogger.LogDetail{
-			Level:     nobslogger.LogLevelInfo,
-			Severity:  nobslogger.LogSeverityInfo,
+		LogDetail: logger.LogDetail{
+			Level:     logger.LogLevelInfo,
+			Severity:  logger.LogSeverityInfo,
 			Timestamp: "tms",
 			Message:   "msg",
 			Details:   "dtl",

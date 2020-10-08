@@ -1,4 +1,4 @@
-package nobslogger
+package logger
 
 // LogLevel numerically defines the general severity of a log entry.
 type LogLevel string

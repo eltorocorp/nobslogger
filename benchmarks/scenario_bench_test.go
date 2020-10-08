@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/eltorocorp/nobslogger"
+	"github.com/eltorocorp/nobslogger/logger"
 	"go.uber.org/zap"
 )
 
@@ -105,13 +105,13 @@ func BenchmarkWithoutFields(b *testing.B) {
 			}
 		})
 	})
-	b.Run("eltorocorp/nobslogger.Info", func(b *testing.B) {
-		logService := nobslogger.InitializeWriter(ioutil.Discard, &nobslogger.ServiceContext{
+	b.Run("eltorocorp/logger.Info", func(b *testing.B) {
+		logService := logger.InitializeWriter(ioutil.Discard, logger.ServiceContext{
 			Environment:       "",
 			SystemName:        "",
 			ServiceName:       "",
 			ServiceInstanceID: "",
-		}, nobslogger.LogServiceOptions{})
+		})
 		logger := logService.NewContext("", "")
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
@@ -120,13 +120,13 @@ func BenchmarkWithoutFields(b *testing.B) {
 			}
 		})
 	})
-	b.Run("eltorocorp/nobslogger.InfoD", func(b *testing.B) {
-		logService := nobslogger.InitializeWriter(ioutil.Discard, &nobslogger.ServiceContext{
+	b.Run("eltorocorp/logger.InfoD", func(b *testing.B) {
+		logService := logger.InitializeWriter(ioutil.Discard, logger.ServiceContext{
 			Environment:       "",
 			SystemName:        "",
 			ServiceName:       "",
 			ServiceInstanceID: "",
-		}, nobslogger.LogServiceOptions{})
+		})
 		logger := logService.NewContext("", "")
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
@@ -224,13 +224,13 @@ func BenchmarkAccumulatedContext(b *testing.B) {
 			}
 		})
 	})
-	b.Run("eltorocorp/nobslogger.Info", func(b *testing.B) {
-		logService := nobslogger.InitializeWriter(ioutil.Discard, &nobslogger.ServiceContext{
+	b.Run("eltorocorp/logger.Info", func(b *testing.B) {
+		logService := logger.InitializeWriter(ioutil.Discard, logger.ServiceContext{
 			Environment:       field1Value,
 			SystemName:        field2Value,
 			ServiceName:       field3Value,
 			ServiceInstanceID: field4Value,
-		}, nobslogger.LogServiceOptions{})
+		})
 		logger := logService.NewContext(field6Value, field7Value)
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
@@ -239,13 +239,13 @@ func BenchmarkAccumulatedContext(b *testing.B) {
 			}
 		})
 	})
-	b.Run("eltorocorp/nobslogger.InfoD", func(b *testing.B) {
-		logService := nobslogger.InitializeWriter(ioutil.Discard, &nobslogger.ServiceContext{
+	b.Run("eltorocorp/logger.InfoD", func(b *testing.B) {
+		logService := logger.InitializeWriter(ioutil.Discard, logger.ServiceContext{
 			Environment:       field1Value,
 			SystemName:        field2Value,
 			ServiceName:       field3Value,
 			ServiceInstanceID: field4Value,
-		}, nobslogger.LogServiceOptions{})
+		})
 		logger := logService.NewContext(field6Value, field7Value)
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
@@ -343,13 +343,13 @@ func BenchmarkAddingFields(b *testing.B) {
 			}
 		})
 	})
-	b.Run("eltorocorp/nobslogger.Info", func(b *testing.B) {
-		logService := nobslogger.InitializeWriter(ioutil.Discard, &nobslogger.ServiceContext{
+	b.Run("eltorocorp/logger.Info", func(b *testing.B) {
+		logService := logger.InitializeWriter(ioutil.Discard, logger.ServiceContext{
 			Environment:       field1Value,
 			SystemName:        field2Value,
 			ServiceName:       field3Value,
 			ServiceInstanceID: field4Value,
-		}, nobslogger.LogServiceOptions{})
+		})
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
@@ -358,13 +358,13 @@ func BenchmarkAddingFields(b *testing.B) {
 			}
 		})
 	})
-	b.Run("eltorocorp/nobslogger.InfoD", func(b *testing.B) {
-		logService := nobslogger.InitializeWriter(ioutil.Discard, &nobslogger.ServiceContext{
+	b.Run("eltorocorp/logger.InfoD", func(b *testing.B) {
+		logService := logger.InitializeWriter(ioutil.Discard, logger.ServiceContext{
 			Environment:       field1Value,
 			SystemName:        field2Value,
 			ServiceName:       field3Value,
 			ServiceInstanceID: field4Value,
-		}, nobslogger.LogServiceOptions{})
+		})
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {

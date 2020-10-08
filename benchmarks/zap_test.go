@@ -52,7 +52,7 @@ const (
 	field4Value = "00000-11111-22222-33333-44444-55555"
 
 	field5Name = "timestamp"
-	// nobslogger tracks this as a unixnano. Doing similar here for an apples to apples comparison.
+	// logger tracks this as a unixnano. Doing similar here for an apples to apples comparison.
 	field5Value = "1601932749025031000"
 
 	field6Name  = "site"

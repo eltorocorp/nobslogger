@@ -1,4 +1,4 @@
-package nobslogger
+package logger
 
 // A LogDetail defines low level information for a structured log entry.
 type LogDetail struct {
