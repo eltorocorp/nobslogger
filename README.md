@@ -1,15 +1,13 @@
-# :cow: logger
-logger. A fast, lightweight, no-BS, static-structured/leveled logger.
+# :cow: NobSlogger 
+NobSlogger. A fast, opinionated, lightweight, no-BS, static-structured/leveled logger.
 
-[![godoc](http://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/eltorocorp/logger)
-[![Go Report Card](https://goreportcard.com/badge/github.com/eltorocorp/logger)](https://goreportcard.com/report/github.com/eltorocorp/logger)
-[![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/eltorocorp/logger/master/LICENSE)
-[![Coverage](http://gocover.io/_badge/github.com/rs/zerolog)](http://gocover.io/github.com/eltorocorp/logger)
-
-> logger is currently pre-release, and its API should be considered unstable.
+[![godoc](http://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/eltorocorp/nobslogger)
+[![Go Report Card](https://goreportcard.com/badge/github.com/eltorocorp/nobslogger)](https://goreportcard.com/report/github.com/eltorocorp/nobslogger)
+[![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/eltorocorp/nobslogger/master/LICENSE)
+[![Coverage](http://gocover.io/_badge/github.com/rs/zerolog)](http://gocover.io/github.com/eltorocorp/nobslogger)
 
 No BS:
- - logger doesn't try to bend to everybody's idea of what should be logged and how it should be structured.
+ - NobSlogger doesn't try to bend to everybody's idea of what should be logged and how it should be structured.
  - It has a staticly structured log format that is focused on use for microservice activity logs.
  - It is focused on providing structured information that helps identify what is happening, where it is happening, and in what order it is happening, so that issues can be identified quickly.
  - If you want more flexibility on which fields you want to log or how they are formatted, use Zap or Zerolog.
@@ -17,30 +15,30 @@ No BS:
 
 # Installation
 
-`go get -u github.com/eltorocorp/logger`
+`go get -u github.com/eltorocorp/nobslogger`
 
 # Performance
 
-logger is very opinionated. And it is fast as a result\*.
-| Package                               | Time         |  Time % to logger | Objects Allocated |
+NobSlogger is very opinionated. And it is fast as a result\*.
+| Package                               | Time         |  Time % to NobSlogger | Objects Allocated |
 |---------------------------------------|--------------|-----------------------|-------------------|
-| :cow: eltorocorp/logger.Info-4    | 3456 ns/op   | +0%                   | 3 allocs/op       |
-| :cow: eltorocorp/logger.InfoD-4   | 3665 ns/op   | +6%                   | 3 allocs/op       |
+| :cow: NobSlogger.Info-4               | 3456 ns/op   | +0%                   | 3 allocs/op       |
+| :cow: NobSlogger.InfoD-4              | 3665 ns/op   | +6%                   | 3 allocs/op       |
 | rs/zerolog.Check-4                    | 4710 ns/op   | +36%                  | 0 allocs/op       |
 | rs/zerolog-4                          | 4729 ns/op   | +37%                  | 0 allocs/op       |
-| Zap-4                                 | 6454 ns/op   | +87%                  | 1 allocs/op       |
-| Zap.Check-4                           | 6542 ns/op   | +89%                  | 1 allocs/op       |
-| Zap.Sugar-4                           | 7545 ns/op   | +118%                 | 3 allocs/op       |
+| uber-go/Zap-4                         | 6454 ns/op   | +87%                  | 1 allocs/op       |
+| uber-go/Zap.Check-4                   | 6542 ns/op   | +89%                  | 1 allocs/op       |
+| uber-go/Zap.Sugar-4                   | 7545 ns/op   | +118%                 | 3 allocs/op       |
 | go-kit/kit/log-4                      | 20891 ns/op  | +504%                 | 25 allocs/op      |
 | apex/log-4                            | 71477 ns/op  | +1968%                | 27 allocs/op      |
 | inconshreveable/log15-4               | 81934 ns/op  | +2271%                | 35 allocs/op      |
 | sirupsen/logrus-4                     | 84882 ns/op  | +2356%                | 39 allocs/op      |
 
-> *\*logger's benchmarks are based on the accumulated context benchmark suite used by the Zap and Zerolog loggers.
-Since logger is so much more opinionated than Zap and Zerolog, the other benchmarks they often use to compare eachother don't apply well to logger. However, the accumulated context benchmark suite is a fair representation of what is likely the most apples to apples use case between all three systems.*
+> *\*NobSlogger's benchmarks are based on the accumulated context benchmark suite used by the Zap and Zerolog loggers.
+Since NobSlogger is so much more opinionated than Zap and Zerolog, the other benchmarks they often use to compare eachother don't apply well to NobSlogger. However, the accumulated context benchmark suite is a fair representation of what is likely the most apples to apples use case between all three systems.*
 
 # Log Structure
-As mentioned in the No BS section above, logger gets its performance by being very opinionated about what constitutes a log entry. It does not try to be all things to all people, but does succeed at doing what will work for most scenarios really well.
+As mentioned in the No BS section above, NobSlogger gets its performance by being very opinionated about what constitutes a log entry. It does not try to be all things to all people, but does succeed at doing what will work for most scenarios really well.
 
 Logs are structred at three levels. The Service, Context, and Entry (described in more detail below).
 Each structural level presents progressively more detail about the context within which each log entry occurs. This is designed to help identify what, where, and when things are going on with a system without getting bogged down in too much BS.
