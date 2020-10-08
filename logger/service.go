@@ -89,6 +89,8 @@ type LogService struct {
 // system might receive a partial log message. As such, it is recommended that
 // the destination service be running a json codec that is able to identify
 // and flag if/when an inbound message is incomplete.
+//
+// hostURI: Must be a fully qualified URI including port.
 func InitializeUDP(hostURI string, serviceContext ServiceContext) LogService {
 	return InitializeUDPWithOptions(hostURI, serviceContext, defaultLogServiceOptions())
 }
