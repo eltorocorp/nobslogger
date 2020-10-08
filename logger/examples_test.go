@@ -75,7 +75,7 @@ func ExampleLogService_multipleContexts() {
 	loggerSvc.Wait()
 }
 
-// LogService supports having a one (or more) log contexts span multiple
+// LogService supports having one (or more) log contexts span multiple
 // goroutines.
 func ExampleLogService_contextAcrossGoroutines() {
 	serviceContext := logger.ServiceContext{
@@ -129,7 +129,7 @@ func ExampleLogService_cancelFromSeparateGoroutine() {
 }
 
 // LogService contexts support a vartiety of log methods, including, but not
-// limmitted to those shown in this example.
+// limited to those shown in this example.
 func ExampleLogService_variousContextMethods() {
 	serviceContext := logger.ServiceContext{
 		Environment:       "test",
