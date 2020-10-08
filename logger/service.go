@@ -187,7 +187,7 @@ func (ls *LogService) writeEntry(entry LogEntry) {
 		_, err = ls.LogWriter.Write(errLogEntry)
 		if err != nil {
 			stdErr.Println(string(errLogEntry))
-			log.New(os.Stderr, "", 0).Println(err.Error())
+			stdErr.Println(err.Error())
 		}
 	}
 }

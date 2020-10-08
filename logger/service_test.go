@@ -2,6 +2,7 @@ package logger_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/eltorocorp/nobslogger/logger"
@@ -44,4 +45,35 @@ func Test_ServiceInitializeWriterPersistentError(t *testing.T) {
 	logger.Info("message")
 	loggerService.Cancel()
 	loggerService.Wait()
+}
+
+// The LogService should support ingestion of logs from LogContexts on different
+// goroutines.
+func Test_LogServiceSupportsMultipleContexts(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	w := func(bb []byte) (int, error) {
+		re := regexp.MustCompile(`\d{19}`)
+		msg := re.ReplaceAllString(string(bb), "1234567890123456789")
+		return len(msg), nil
+	}
+	writer := mock_io.NewMockWriter(ctrl)
+	writer.EXPECT().Write(gomock.Any()).DoAndReturn(w).Times(2)
+
+	serviceContext := logger.ServiceContext{}
+	loggerSvc := logger.InitializeWriter(writer, serviceContext)
+
+	go func() {
+		logger := loggerSvc.NewContext("1", "")
+		logger.Info("1")
+	}()
+
+	go func() {
+		logger := loggerSvc.NewContext("2", "")
+		logger.Info("2")
+	}()
+
+	loggerSvc.Cancel()
+	loggerSvc.Wait()
 }
