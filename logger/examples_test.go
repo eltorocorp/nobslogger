@@ -19,7 +19,7 @@ func (fakeWriter) Write(message []byte) (int, error) {
 	return len(msg), nil
 }
 
-func ExampleLogService_InitializeWriter() {
+func ExampleInitializeWriter() {
 	// Establish a ServiceContext.
 	// This records the highest level information about the system being logged.
 	serviceContext := logger.ServiceContext{
