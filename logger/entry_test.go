@@ -29,6 +29,6 @@ func TestLogEntrySerialize(t *testing.T) {
 	}
 
 	actualResult := string(logEntry.Serialize())
-	expectedResult := `{"timestamp":"tms","environment":"env","system_name":"sys","service_name":"srn","service_instance_id":"sid","site":"sit","operation":"opn","level":"300","severity":"info","message":"msg","details":"dtl"}`
+	expectedResult := `{"timestamp":"tms","environment":"env","system_name":"sys","service_name":"srn","service_instance_id":"sid","site":"sit","operation":"opn","level":"300","severity":"info","msg":"msg","details":"dtl"}`
 	assert.Equal(t, expectedResult, actualResult)
 }

@@ -48,7 +48,7 @@ func ExampleInitializeWriter() {
 	// log message queue.
 	loggerSvc.Wait()
 
-	// Output: {"timestamp":"1234567890123456789","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"ExampleInitializeWriter_ServiceContext","operation":"running example","level":"300","severity":"info","message":"Here is some info","details":""}
+	// Output: {"timestamp":"1234567890123456789","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"ExampleInitializeWriter_ServiceContext","operation":"running example","level":"300","severity":"info","msg":"Here is some info","details":""}
 }
 
 // LogService supports having multiple logging contexts that may be initialized
@@ -175,6 +175,6 @@ func ExampleLogContext_Write() {
 	loggerSvc.Cancel()
 	loggerSvc.Wait()
 
-	// Output: {"timestamp":"1234567890123456789","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"ExampleLogContext","operation":"Write","level":"100","severity":"trace","message":"Hello from the standard library logger!
+	// Output: {"timestamp":"1234567890123456789","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"ExampleLogContext","operation":"Write","level":"100","severity":"trace","msg":"Hello from the standard library logger!
 	//","details":""}
 }

@@ -22,7 +22,7 @@ const (
 	severityToken          = "\"severity\""
 	siteToken              = "\"site\""
 	operationToken         = "\"operation\""
-	messageToken           = "\"message\""
+	messageToken           = "\"msg\""
 	detailsToken           = "\"details\""
 )
 
