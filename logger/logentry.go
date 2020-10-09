@@ -34,15 +34,46 @@ const (
 func (le LogEntry) Serialize() []byte {
 	return []byte(braceOpenToken +
 		timestampToken + fieldOpenToken + le.Timestamp + fieldCloseToken +
-		environmentToken + fieldOpenToken + le.Environment + fieldCloseToken +
-		systemNameToken + fieldOpenToken + le.SystemName + fieldCloseToken +
-		serviceNameToken + fieldOpenToken + le.ServiceName + fieldCloseToken +
-		serviceInstanceIDToken + fieldOpenToken + le.ServiceInstanceID + fieldCloseToken +
-		siteToken + fieldOpenToken + le.Site + fieldCloseToken +
-		operationToken + fieldOpenToken + le.Operation + fieldCloseToken +
+		environmentToken + fieldOpenToken + escape(le.Environment) + fieldCloseToken +
+		systemNameToken + fieldOpenToken + escape(le.SystemName) + fieldCloseToken +
+		serviceNameToken + fieldOpenToken + escape(le.ServiceName) + fieldCloseToken +
+		serviceInstanceIDToken + fieldOpenToken + escape(le.ServiceInstanceID) + fieldCloseToken +
+		siteToken + fieldOpenToken + escape(le.Site) + fieldCloseToken +
+		operationToken + fieldOpenToken + escape(le.Operation) + fieldCloseToken +
 		levelToken + fieldOpenToken + string(le.Level) + fieldCloseToken +
 		severityToken + fieldOpenToken + string(le.Severity) + fieldCloseToken +
-		messageToken + fieldOpenToken + le.Message + fieldCloseToken +
-		detailsToken + fieldOpenToken + le.Details + finalFieldCloseToken +
+		messageToken + fieldOpenToken + escape(le.Message) + fieldCloseToken +
+		detailsToken + fieldOpenToken + escape(le.Details) + finalFieldCloseToken +
 		braceCloseToken)
+}
+
+func escape(s string) string {
+	for i := 0; i < len(s); {
+		switch s[i] {
+		case '\b':
+			s = s[:i] + "\\b" + s[i+1:]
+			i += 2
+		case '\f':
+			s = s[:i] + "\\f" + s[i+1:]
+			i += 2
+		case '\n':
+			s = s[:i] + "\\n" + s[i+1:]
+			i += 2
+		case '\r':
+			s = s[:i] + "\\r" + s[i+1:]
+			i += 2
+		case '\t':
+			s = s[:i] + "\\t" + s[i+1:]
+			i += 2
+		case '"':
+			s = s[:i] + `\"` + s[i+1:]
+			i += 2
+		case '\\':
+			s = s[:i] + `\\` + s[i+1:]
+			i += 2
+		default:
+			i++
+		}
+	}
+	return s
 }
