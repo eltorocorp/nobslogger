@@ -32,14 +32,15 @@ const (
 // but is also ~140 times faster than `json.MarshalIndent`, ~30 times faster
 // than `json.Marhsal`, and ~20 times faster than `fmt.Sprintf`.
 func (le LogEntry) Serialize() []byte {
+	// JSON escapement: See TestLogServiceEscapesJSON
 	return []byte(braceOpenToken +
 		timestampToken + fieldOpenToken + le.Timestamp + fieldCloseToken +
-		environmentToken + fieldOpenToken + escape(le.Environment) + fieldCloseToken +
-		systemNameToken + fieldOpenToken + escape(le.SystemName) + fieldCloseToken +
-		serviceNameToken + fieldOpenToken + escape(le.ServiceName) + fieldCloseToken +
-		serviceInstanceIDToken + fieldOpenToken + escape(le.ServiceInstanceID) + fieldCloseToken +
-		siteToken + fieldOpenToken + escape(le.Site) + fieldCloseToken +
-		operationToken + fieldOpenToken + escape(le.Operation) + fieldCloseToken +
+		environmentToken + fieldOpenToken + le.Environment + fieldCloseToken +
+		systemNameToken + fieldOpenToken + le.SystemName + fieldCloseToken +
+		serviceNameToken + fieldOpenToken + le.ServiceName + fieldCloseToken +
+		serviceInstanceIDToken + fieldOpenToken + le.ServiceInstanceID + fieldCloseToken +
+		siteToken + fieldOpenToken + le.Site + fieldCloseToken +
+		operationToken + fieldOpenToken + le.Operation + fieldCloseToken +
 		levelToken + fieldOpenToken + string(le.Level) + fieldCloseToken +
 		severityToken + fieldOpenToken + string(le.Severity) + fieldCloseToken +
 		messageToken + fieldOpenToken + escape(le.Message) + fieldCloseToken +

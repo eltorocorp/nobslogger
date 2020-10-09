@@ -1,7 +1,10 @@
 package logger_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
+	"strings"
 	"testing"
 	"time"
 
@@ -95,4 +98,75 @@ func Test_LogServiceSupportsCancellationFromSeparateGoroutine(t *testing.T) {
 	}()
 
 	loggerSvc.Wait()
+}
+
+func TestLogServiceEscapesJSON(t *testing.T) {
+	// timestamp, level, and severity don't require escaping since they're set
+	// internally.
+	//
+	// environment, system name, service name, and service instance id are all
+	// set at the LogService level when the LogServiceContext is ingested.
+	//
+	// site and operation are set at the LogService level when a new LogContext
+	// is created.
+	//
+	// message and details are set at the LogEntry level when LogEntry.Serialize
+	// is called.
+	//
+	// In some test cases, runes are duplicated to also account for a case where
+	// two or more runes must be replaced within a string.
+	testCases := []string{
+		"\b\b",
+		"\f\f",
+		"\n\n",
+		"\r\r",
+		"\t\t",
+		`"`,
+		`\`}
+
+	for _, s := range testCases {
+		f := func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			writer := mock_io.NewMockWriter(ctrl)
+			writer.EXPECT().Write(gomock.Any()).
+				AnyTimes().
+				DoAndReturn(
+					func(bb []byte) (int, error) {
+						msg := string(bb)
+						d := json.NewDecoder(strings.NewReader(msg))
+						for {
+							_, err := d.Token()
+							if err != nil && err == io.EOF {
+								return len(msg), nil
+							}
+							if err != nil {
+								// Test is failed with a panic to ensure that
+								// the logService doesn't try to handle the test
+								// error as a normal error. Panicking also
+								// simplifies bubbling up the test failure in
+								// gomock since we have a lot of goroutines in
+								// the mix (both from the test framework and
+								// nobslogger internals).
+								panic(fmt.Sprintf("Error: %v\nJSON: %s", err, msg))
+							}
+						}
+					},
+				)
+
+			logService := logger.InitializeWriter(writer, logger.ServiceContext{
+				Environment:       s,
+				ServiceInstanceID: s,
+				ServiceName:       s,
+				SystemName:        s,
+			})
+			log := logService.NewContext(s, s)
+			log.InfoD(s, s)
+			logService.Cancel()
+			logService.Wait()
+		}
+		t.Run("rune:"+s, f)
+	}
+
 }

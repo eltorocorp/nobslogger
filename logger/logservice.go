@@ -117,6 +117,11 @@ func InitializeWriterWithOptions(w io.Writer, serviceContext ServiceContext, opt
 	cancelChannel := make(chan struct{}, 1)
 	doneChannel := make(chan struct{}, 1)
 
+	serviceContext.Environment = escape(serviceContext.Environment)
+	serviceContext.ServiceInstanceID = escape(serviceContext.ServiceInstanceID)
+	serviceContext.ServiceName = escape(serviceContext.ServiceName)
+	serviceContext.SystemName = escape(serviceContext.SystemName)
+
 	ls := LogService{
 		messageChannel: messageChannel,
 		cancelChannel:  cancelChannel,
@@ -196,8 +201,8 @@ func (ls *LogService) writeEntry(entry LogEntry) {
 func (ls *LogService) NewContext(site, operation string) LogContext {
 	return LogContext{
 		logService: ls,
-		Site:       site,
-		Operation:  operation,
+		Site:       escape(site),
+		Operation:  escape(operation),
 	}
 }
 
