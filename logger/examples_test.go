@@ -170,11 +170,13 @@ func ExampleLogContext_Write() {
 
 	// When we call Println, the current LogContext will log the message at the
 	// Trace level.
+	// Note that the expected output will include an escaped newline character.
+	// This is added by the Println function, and is properly escaped by
+	// nobslogger to prevent mangling the JSON output.
 	stdlibLogger.Println("Hello from the standard library logger!")
 
 	loggerSvc.Cancel()
 	loggerSvc.Wait()
 
-	// Output: {"timestamp":"1234567890123456789","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"ExampleLogContext","operation":"Write","level":"100","severity":"trace","msg":"Hello from the standard library logger!
-	//","details":""}
+	// Output: {"timestamp":"1234567890123456789","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"ExampleLogContext","operation":"Write","level":"100","severity":"trace","msg":"Hello from the standard library logger!\n","details":""}
 }
