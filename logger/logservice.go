@@ -5,14 +5,7 @@ import (
 	"log"
 	"net"
 	"os"
-	"strconv"
 	"time"
-)
-
-const (
-	// Run benchmarks to verify performance gains before altering messageChannel
-	// buffer size.
-	messageChannelBufferSize = 10
 )
 
 // ServiceContext defines structural log elements that are applied to every
@@ -34,13 +27,10 @@ type ServiceContext struct {
 
 // LogServiceOptions exposes configuration settings for LogService behavior.
 type LogServiceOptions struct {
-	// MaxFlushAttempts is the maximum number of times that the LogService will
-	// try to flush its queue before finalizing a cancellation request.
+	// MaxFlushAttempts is deprecated.
 	MaxFlushAttempts int
 
-	// TimeBetweenFlushAttempts is the amount of time the LogService will wait
-	// for new inbound messages to arrive in its queue before deciding that the
-	// queue is empty and finalizing the a cancellation request.
+	// TimeBetweenFlushAttempts is deprecated.
 	TimeBetweenFlushAttempts time.Duration
 }
 
@@ -54,9 +44,8 @@ func defaultLogServiceOptions() LogServiceOptions {
 // LogService provides access to a writer such as that for a file system or an
 // upstream UDP endpoint.
 type LogService struct {
-	messageChannel chan LogEntry
-	cancelChannel  chan struct{}
-	doneChannel    chan struct{}
+	messageBuffer  string
+	locked         bool
 	serviceContext *ServiceContext
 	options        LogServiceOptions
 	logWriter      io.Writer
@@ -113,86 +102,48 @@ func InitializeWriter(writer io.Writer, serviceContext ServiceContext) LogServic
 // InitializeWriterWithOptions is the same as InitializeWriter, but with custom
 // LogServiceOptions supplied. See InitializeWriter.
 func InitializeWriterWithOptions(w io.Writer, serviceContext ServiceContext, options LogServiceOptions) LogService {
-	messageChannel := make(chan LogEntry, messageChannelBufferSize)
-	cancelChannel := make(chan struct{}, 1)
-	doneChannel := make(chan struct{}, 1)
-
 	serviceContext.Environment = escape(serviceContext.Environment)
 	serviceContext.ServiceInstanceID = escape(serviceContext.ServiceInstanceID)
 	serviceContext.ServiceName = escape(serviceContext.ServiceName)
 	serviceContext.SystemName = escape(serviceContext.SystemName)
 
+	b := make([]byte, 0, 65000)
+
 	ls := LogService{
-		messageChannel: messageChannel,
-		cancelChannel:  cancelChannel,
-		doneChannel:    doneChannel,
+		messageBuffer:  string(b),
+		locked:         false,
 		serviceContext: &serviceContext,
 		options:        options,
 		logWriter:      w,
 	}
 
-	go func() {
-		ls.initiateMessagePoll()
-		ls.flushPendingMessages()
-		ls.doneChannel <- struct{}{}
-	}()
-
 	return ls
 }
 
-func (ls *LogService) initiateMessagePoll() {
-	for {
-		select {
-		case <-ls.cancelChannel:
-			return
-		case entry := <-ls.messageChannel:
-			ls.writeEntry(entry)
-		}
-	}
-}
-
-func (ls *LogService) flushPendingMessages() {
-	remainingFlushAttempts := ls.options.MaxFlushAttempts
-	for {
-		select {
-		case entry := <-ls.messageChannel:
-			remainingFlushAttempts = ls.options.MaxFlushAttempts
-			ls.writeEntry(entry)
-		default:
-			if remainingFlushAttempts == 0 || int64(ls.options.TimeBetweenFlushAttempts) == 0 {
-				return
-			}
-			time.Sleep(ls.options.TimeBetweenFlushAttempts)
-			remainingFlushAttempts--
-		}
-	}
-}
-
-func (ls *LogService) writeEntry(entry LogEntry) {
-	entryBytes := entry.Serialize()
-	_, err := ls.logWriter.Write(entryBytes)
+func (ls *LogService) writeEntry() {
+	_, err := ls.logWriter.Write([]byte(ls.messageBuffer))
 	if err != nil {
 		stdErr := log.New(os.Stderr, "", 0)
-		errLogEntry := LogEntry{
-			ServiceContext: *ls.serviceContext,
-			LogContext: LogContext{
-				Site:      "log service",
-				Operation: "handleLogs",
-			},
-			LogDetail: LogDetail{
-				Level:     LogLevelError,
-				Severity:  LogSeverityError,
-				Message:   "error occurred while shipping log data",
-				Details:   err.Error(),
-				Timestamp: strconv.FormatInt(time.Now().UTC().UnixNano(), 10),
-			},
-		}.Serialize()
-		stdErr.Println(string(entryBytes))
-		_, err = ls.logWriter.Write(errLogEntry)
-		if err != nil {
-			stdErr.Println(string(errLogEntry))
-			stdErr.Println(err.Error())
-		}
+		// errLogEntry := LogEntry{
+		// 	ServiceContext: *ls.serviceContext,
+		// 	LogContext: LogContext{
+		// 		Site:      "log service",
+		// 		Operation: "handleLogs",
+		// 	},
+		// 	LogDetail: LogDetail{
+		// 		Level:     LogLevelError,
+		// 		Severity:  LogSeverityError,
+		// 		Message:   "error occurred while shipping log data",
+		// 		Details:   err.Error(),
+		// 		Timestamp: strconv.FormatInt(time.Now().UTC().UnixNano(), 10),
+		// 	},
+		// }.Serialize()
+		stdErr.Println(ls.messageBuffer)
+		// _, err = ls.logWriter.Write(errLogEntry)
+		// if err != nil {
+		// 	stdErr.Println(string(errLogEntry))
+		// 	stdErr.Println(err.Error())
+		// }
 	}
 }
 
@@ -206,36 +157,10 @@ func (ls *LogService) NewContext(site, operation string) LogContext {
 	}
 }
 
-func (ls *LogService) submitAsync(sc ServiceContext, lc LogContext, ld LogDetail) {
-	// timestamping with unixnano is faster than converting to a std format.
-	ld.Timestamp = strconv.FormatInt(time.Now().UTC().UnixNano(), 10)
-	ls.messageChannel <- LogEntry{
-		ServiceContext: sc,
-		LogContext:     lc,
-		LogDetail:      ld,
-	}
-}
-
-// Cancel notifies the LogService that the host system is attempting to
-// wind down gracefully. When Cancel is called, LogService will begin
-// flushing any backlogged messages that remain within its message queue.
-//
-// Calling cancel more than once has no additional effect.
-//
-// Note that it is the host system's responsibility to gracefully
-// wind down operations. The host system must call Cancel AFTER the host
-// system is quiet (and presumably no longer initiating new log messages via any
-// spawned LogContexts). If any LogContext's continue to send log messages to
-// the LogService after Cancel is called, the LogService will either never halt
-// or may halt before all messages are processed. Note that the Wait method
-// will always block unless Cancel is called, and will continue to block until
-// the cancellation process (as described above) is finalized.
+// Cancel is deprecated.
 func (ls *LogService) Cancel() {
-	ls.cancelChannel <- struct{}{}
 }
 
-// Wait blocks until Cancel is called and all logs in LogService's internal
-// queue have been flushed.
+// Wait is deprecated.
 func (ls *LogService) Wait() {
-	<-ls.doneChannel
 }
