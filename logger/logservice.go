@@ -2,9 +2,7 @@ package logger
 
 import (
 	"io"
-	"log"
 	"net"
-	"os"
 	"sync/atomic"
 	"time"
 )
@@ -47,7 +45,6 @@ func defaultLogServiceOptions() LogServiceOptions {
 // LogService provides access to a writer such as that for a file system or an
 // upstream UDP endpoint.
 type LogService struct {
-	messageBuffer  string
 	locked         int32
 	waiters        uint32
 	serviceContext *ServiceContext
@@ -106,15 +103,12 @@ func InitializeWriter(writer io.Writer, serviceContext ServiceContext) LogServic
 // InitializeWriterWithOptions is the same as InitializeWriter, but with custom
 // LogServiceOptions supplied. See InitializeWriter.
 func InitializeWriterWithOptions(w io.Writer, serviceContext ServiceContext, options LogServiceOptions) LogService {
-	serviceContext.Environment = escape(serviceContext.Environment)
-	serviceContext.ServiceInstanceID = escape(serviceContext.ServiceInstanceID)
-	serviceContext.ServiceName = escape(serviceContext.ServiceName)
-	serviceContext.SystemName = escape(serviceContext.SystemName)
-
-	b := make([]byte, 0, 65000)
+	// serviceContext.Environment = escape(serviceContext.Environment)
+	// serviceContext.ServiceInstanceID = escape(serviceContext.ServiceInstanceID)
+	// serviceContext.ServiceName = escape(serviceContext.ServiceName)
+	// serviceContext.SystemName = escape(serviceContext.SystemName)
 
 	ls := LogService{
-		messageBuffer:  string(b),
 		locked:         0,
 		waiters:        0,
 		serviceContext: &serviceContext,
@@ -125,10 +119,10 @@ func InitializeWriterWithOptions(w io.Writer, serviceContext ServiceContext, opt
 	return ls
 }
 
-func (ls *LogService) writeEntry() {
-	_, err := ls.logWriter.Write([]byte(ls.messageBuffer))
+func (ls *LogService) writeEntry(msg []byte) {
+	_, err := ls.logWriter.Write(msg)
 	if err != nil {
-		stdErr := log.New(os.Stderr, "", 0)
+		// stdErr := log.New(os.Stderr, "", 0)
 		// errLogEntry := LogEntry{
 		// 	ServiceContext: *ls.serviceContext,
 		// 	LogContext: LogContext{
@@ -143,7 +137,7 @@ func (ls *LogService) writeEntry() {
 		// 		Timestamp: strconv.FormatInt(time.Now().UTC().UnixNano(), 10),
 		// 	},
 		// }.Serialize()
-		stdErr.Println(ls.messageBuffer)
+		// stdErr.Println(ls.messageBuffer)
 		// _, err = ls.logWriter.Write(errLogEntry)
 		// if err != nil {
 		// 	stdErr.Println(string(errLogEntry))
@@ -157,8 +151,8 @@ func (ls *LogService) writeEntry() {
 func (ls *LogService) NewContext(site, operation string) LogContext {
 	return LogContext{
 		logService: ls,
-		Site:       escape(site),
-		Operation:  escape(operation),
+		Site:       site,
+		Operation:  operation,
 	}
 }
 

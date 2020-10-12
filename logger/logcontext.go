@@ -1,9 +1,7 @@
 package logger
 
 import (
-	"strconv"
 	"sync/atomic"
-	"time"
 )
 
 // LogContext defines high level information for a structured log entry.
@@ -154,27 +152,34 @@ func (l LogContext) Write(message []byte) (int, error) {
 	return len(message), nil
 }
 
+var bb []byte = make([]byte, 60000)
+
 func (l LogContext) submit(sc *ServiceContext, lc *LogContext, ld LogDetail) {
-	ld.Timestamp = strconv.FormatInt(time.Now().UTC().UnixNano(), 10)
+	// ld.Timestamp = strconv.FormatInt(time.Now().UTC().UnixNano(), 10)
 	atomic.AddUint32(&l.logService.waiters, 1)
 	for {
 		if !atomic.CompareAndSwapInt32(&l.logService.locked, 0, 1) {
 			continue
 		}
-		l.logService.messageBuffer = braceOpenToken +
-			timestampToken + fieldOpenToken + ld.Timestamp + fieldCloseToken +
-			environmentToken + fieldOpenToken + sc.Environment + fieldCloseToken +
-			systemNameToken + fieldOpenToken + sc.SystemName + fieldCloseToken +
-			serviceNameToken + fieldOpenToken + sc.ServiceName + fieldCloseToken +
-			serviceInstanceIDToken + fieldOpenToken + sc.ServiceInstanceID + fieldCloseToken +
-			siteToken + fieldOpenToken + lc.Site + fieldCloseToken +
-			operationToken + fieldOpenToken + lc.Operation + fieldCloseToken +
-			levelToken + fieldOpenToken + string(ld.Level) + fieldCloseToken +
-			severityToken + fieldOpenToken + string(ld.Severity) + fieldCloseToken +
-			messageToken + fieldOpenToken + escape(ld.Message) + fieldCloseToken +
-			detailsToken + fieldOpenToken + escape(ld.Details) + finalFieldCloseToken +
-			braceCloseToken
-		l.logService.writeEntry()
+		// l.logService.writeEntry([]byte(braceOpenToken +
+		// 	timestampToken + fieldOpenToken + ld.Timestamp + fieldCloseToken +
+		// 	environmentToken + fieldOpenToken + sc.Environment + fieldCloseToken +
+		// 	systemNameToken + fieldOpenToken + sc.SystemName + fieldCloseToken +
+		// 	serviceNameToken + fieldOpenToken + sc.ServiceName + fieldCloseToken +
+		// 	serviceInstanceIDToken + fieldOpenToken + sc.ServiceInstanceID + fieldCloseToken +
+		// 	siteToken + fieldOpenToken + lc.Site + fieldCloseToken +
+		// 	operationToken + fieldOpenToken + lc.Operation + fieldCloseToken +
+		// 	levelToken + fieldOpenToken + string(ld.Level) + fieldCloseToken +
+		// 	severityToken + fieldOpenToken + string(ld.Severity) + fieldCloseToken +
+		// 	messageToken + fieldOpenToken + ld.Message + fieldCloseToken +
+		// 	detailsToken + fieldOpenToken + ld.Details + finalFieldCloseToken +
+		// 	braceCloseToken))
+		offset := 0
+
+		copy(bb[offset:offset+len(sc.Environment)], sc.Environment)
+		offset += len(sc.Environment)
+
+		l.logService.writeEntry(bb[0:offset])
 		atomic.SwapInt32(&l.logService.locked, 0)
 		atomic.AddUint32(&l.logService.waiters, ^uint32(0))
 		break
