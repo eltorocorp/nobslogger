@@ -10,7 +10,7 @@ import (
 
 func init() {
 	// If changing the output format, be sure to also update the serializer, as
-	// it is expecting a 35 byte value.
+	// it is expecting a 32 byte value.
 	fastime.SetFormat(time.RFC3339Nano)
 }
 
@@ -156,10 +156,10 @@ func (l *LogContext) FatalD(message, details string) {
 
 // Write enables this context to be used as an io.Writer.
 // Messages sent via the Write method are interpretted as Trace level events.
-// The content of messages is not parsed, and is merely forwarded to the
-// LogContext.Trace method as a blob.
+// The Write method always inspects the inbound message and escapes any JSON
+// characters to avoid unintentionally mangling the expected log entry.
 func (l LogContext) Write(message []byte) (int, error) {
-	l.Trace(string(message))
+	l.Trace(escape(string(message)))
 	return len(message), nil
 }
 
@@ -189,7 +189,7 @@ func serialize(buffer []byte, sc *ServiceContext, lc *LogContext, ld LogDetail) 
 	offset += copy(buffer[offset:offset+len(timestampToken)], timestampToken)
 	offset += copy(buffer[offset:offset+len(fieldOpenToken)], fieldOpenToken)
 	// init function sets format to rfc3339nano, which is always 35 bytes long.
-	offset += copy(buffer[offset:offset+35], fastime.FormattedNow())
+	offset += copy(buffer[offset:offset+32], fastime.FormattedNow())
 	offset += copy(buffer[offset:offset+len(fieldCloseToken)], fieldCloseToken)
 	offset += copy(buffer[offset:offset+len(environmentToken)], environmentToken)
 	offset += copy(buffer[offset:offset+len(fieldOpenToken)], fieldOpenToken)

@@ -2,7 +2,9 @@ package logger
 
 import (
 	"io"
+	"log"
 	"net"
+	"os"
 	"sync/atomic"
 	"time"
 )
@@ -44,6 +46,7 @@ func defaultLogServiceOptions() LogServiceOptions {
 type LogService struct {
 	locked         int32
 	waiters        uint32
+	errMsgBuffer   []byte
 	serviceContext *ServiceContext
 	options        LogServiceOptions
 	logWriter      io.Writer
@@ -108,6 +111,7 @@ func InitializeWriterWithOptions(w io.Writer, serviceContext ServiceContext, opt
 	ls := LogService{
 		locked:         0,
 		waiters:        0,
+		errMsgBuffer:   make([]byte, initialMsgBufferAllocation),
 		serviceContext: &serviceContext,
 		options:        options,
 		logWriter:      w,
@@ -119,27 +123,35 @@ func InitializeWriterWithOptions(w io.Writer, serviceContext ServiceContext, opt
 func (ls *LogService) writeEntry(msg []byte) {
 	_, err := ls.logWriter.Write(msg)
 	if err != nil {
-		// stdErr := log.New(os.Stderr, "", 0)
-		// errLogEntry := LogEntry{
-		// 	ServiceContext: *ls.serviceContext,
-		// 	LogContext: LogContext{
-		// 		Site:      "log service",
-		// 		Operation: "handleLogs",
-		// 	},
-		// 	LogDetail: LogDetail{
-		// 		Level:     LogLevelError,
-		// 		Severity:  LogSeverityError,
-		// 		Message:   "error occurred while shipping log data",
-		// 		Details:   err.Error(),
-		// 		Timestamp: strconv.FormatInt(time.Now().UTC().UnixNano(), 10),
-		// 	},
-		// }.Serialize()
-		// stdErr.Println(ls.messageBuffer)
-		// _, err = ls.logWriter.Write(errLogEntry)
-		// if err != nil {
-		// 	stdErr.Println(string(errLogEntry))
-		// 	stdErr.Println(err.Error())
-		// }
+		// We dump the original message to stdErr and try to transmit the error
+		// notification back to the writer. If error transmission fails, we
+		// write the original error transmission as well as the newest error
+		// to stdErr and continue on.
+		//
+		// An error message context is constructed manually here and submitted
+		// directly to `logWriter.Write` (as opposed to instantiating via
+		// `NewContext` and using the `LogContext.submit` method). This allows
+		// the error message to retain priority in the message pipeline.
+		stdErr := log.New(os.Stderr, "", 0)
+		offset := serialize(ls.errMsgBuffer, ls.serviceContext,
+			&LogContext{
+				Site:      "log service",
+				Operation: "handleLogs",
+			},
+			LogDetail{
+				Level:     LogLevelError,
+				Severity:  LogSeverityError,
+				Message:   "error occurred while shipping log data",
+				Details:   err.Error(),
+				Timestamp: time.Now().UTC().Format(time.RFC3339Nano),
+			},
+		)
+		stdErr.Println(string(msg))
+		_, err = ls.logWriter.Write(ls.errMsgBuffer[0:offset])
+		if err != nil {
+			stdErr.Println(string(ls.errMsgBuffer[0:offset]))
+			stdErr.Println(err.Error())
+		}
 	}
 }
 

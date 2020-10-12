@@ -14,8 +14,8 @@ type fakeWriter struct{}
 // Write just replaces the timestamp internally assigned by the LogService
 // with a constant value so the tests remain deterministic.
 func (fakeWriter) Write(message []byte) (int, error) {
-	re := regexp.MustCompile(`\d{19}`)
-	msg := re.ReplaceAllString(string(message), "1234567890123456789")
+	re := regexp.MustCompile(`\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}-\d{2}:\d{2}`)
+	msg := re.ReplaceAllString(string(message), "2009-01-20T12:05:00.000000-04:00")
 	fmt.Println(msg)
 	return len(msg), nil
 }
@@ -30,10 +30,15 @@ func ExampleInitializeWriter() {
 		ServiceInstanceID: "1",
 	}
 
+	// Setup options for the service. In this case, we're instructing the service
+	// to wait at least one second for any remaining log entries to flush
+	// before exiting.
+	serviceOptions := logger.LogServiceOptions{
+		CancellationDeadline: 10 * time.Millisecond,
+	}
+
 	// Initialize the LogService.
-	loggerSvc := logger.InitializeWriterWithOptions(new(fakeWriter), serviceContext, logger.LogServiceOptions{
-		CancellationDeadline: 1 * time.Second,
-	})
+	loggerSvc := logger.InitializeWriterWithOptions(new(fakeWriter), serviceContext, serviceOptions)
 
 	// Get a new logger (LogContext) from the LogService.
 	logger := loggerSvc.NewContext("ExampleInitializeWriter_ServiceContext", "running example")
@@ -43,7 +48,7 @@ func ExampleInitializeWriter() {
 
 	loggerSvc.Finish()
 
-	// Output: {"timestamp":"1234567890123456789","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"ExampleInitializeWriter_ServiceContext","operation":"running example","level":"300","severity":"info","msg":"Here is some info","details":""}
+	// Output: {"timestamp":"2009-01-20T12:05:00.000000-04:00","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"ExampleInitializeWriter_ServiceContext","operation":"running example","level":"300","severity":"info","msg":"Here is some info","details":""}
 }
 
 // LogService supports having multiple logging contexts that may be initialized
@@ -55,7 +60,12 @@ func ExampleLogService_multipleContexts() {
 		ServiceName:       "example runner",
 		ServiceInstanceID: "1",
 	}
-	loggerSvc := logger.InitializeWriter(new(fakeWriter), serviceContext)
+
+	serviceOptions := logger.LogServiceOptions{
+		CancellationDeadline: 10 * time.Millisecond,
+	}
+
+	loggerSvc := logger.InitializeWriterWithOptions(new(fakeWriter), serviceContext, serviceOptions)
 
 	go func() {
 		logger := loggerSvc.NewContext("goroutine 1", "running example")
@@ -68,6 +78,10 @@ func ExampleLogService_multipleContexts() {
 	}()
 
 	loggerSvc.Finish()
+
+	// Output:
+	// {"timestamp":"2009-01-20T12:05:00.000000-04:00","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"goroutine 1","operation":"running example","level":"300","severity":"info","msg":"Here is some info from goroutine 1","details":""}
+	// {"timestamp":"2009-01-20T12:05:00.000000-04:00","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"goroutine 2","operation":"running example","level":"300","severity":"info","msg":"Here is some info from goroutine 2","details":""}
 }
 
 // LogService supports having one (or more) log contexts span multiple
@@ -79,7 +93,13 @@ func ExampleLogService_contextAcrossGoroutines() {
 		ServiceName:       "example runner",
 		ServiceInstanceID: "1",
 	}
-	loggerSvc := logger.InitializeWriter(new(fakeWriter), serviceContext)
+
+	serviceOptions := logger.LogServiceOptions{
+		CancellationDeadline: 10 * time.Millisecond,
+	}
+
+	loggerSvc := logger.InitializeWriterWithOptions(new(fakeWriter), serviceContext, serviceOptions)
+
 	logger := loggerSvc.NewContext("single context", "used across multiple goroutines")
 
 	logger.Info("Log from goroutine 1")
@@ -93,6 +113,11 @@ func ExampleLogService_contextAcrossGoroutines() {
 	}()
 
 	loggerSvc.Finish()
+
+	// Output:
+	// {"timestamp":"2009-01-20T12:05:00.000000-04:00","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"single context","operation":"used across multiple goroutines","level":"300","severity":"info","msg":"Log from goroutine 1","details":""}
+	// {"timestamp":"2009-01-20T12:05:00.000000-04:00","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"single context","operation":"used across multiple goroutines","level":"300","severity":"info","msg":"Log from goroutine 2","details":""}
+	// {"timestamp":"2009-01-20T12:05:00.000000-04:00","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"single context","operation":"used across multiple goroutines","level":"300","severity":"info","msg":"Log from goroutine 3","details":""}
 }
 
 // LogService contexts support a vartiety of log methods, including, but not
@@ -104,7 +129,13 @@ func ExampleLogService_variousContextMethods() {
 		ServiceName:       "example runner",
 		ServiceInstanceID: "1",
 	}
-	loggerSvc := logger.InitializeWriter(new(fakeWriter), serviceContext)
+
+	serviceOptions := logger.LogServiceOptions{
+		CancellationDeadline: 10 * time.Millisecond,
+	}
+
+	loggerSvc := logger.InitializeWriterWithOptions(new(fakeWriter), serviceContext, serviceOptions)
+
 	logger := loggerSvc.NewContext("goroutine 1", "running example")
 
 	logger.Info("An info-level message.")
@@ -114,6 +145,13 @@ func ExampleLogService_variousContextMethods() {
 	logger.DebugD("A debug-level message.", "With extra details!")
 
 	loggerSvc.Finish()
+
+	// Output:
+	// {"timestamp":"2009-01-20T12:05:00.000000-04:00","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"goroutine 1","operation":"running example","level":"300","severity":"info","msg":"An info-level message.","details":""}
+	// {"timestamp":"2009-01-20T12:05:00.000000-04:00","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"goroutine 1","operation":"running example","level":"300","severity":"info","msg":"An info-level message.","details":"With more details!"}
+	// {"timestamp":"2009-01-20T12:05:00.000000-04:00","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"goroutine 1","operation":"running example","level":"200","severity":"debug","msg":"A debug-level message","details":""}
+	// {"timestamp":"2009-01-20T12:05:00.000000-04:00","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"goroutine 1","operation":"running example","level":"200","severity":"debug","msg":"A debug-level message.","details":"With extra details!"}
+
 }
 
 // LogContexts also support the io.Writer interface, so they can be used to
@@ -125,7 +163,13 @@ func ExampleLogContext_Write() {
 		ServiceName:       "example runner",
 		ServiceInstanceID: "1",
 	}
-	loggerSvc := logger.InitializeWriter(new(fakeWriter), serviceContext)
+
+	serviceOptions := logger.LogServiceOptions{
+		CancellationDeadline: 10 * time.Millisecond,
+	}
+
+	loggerSvc := logger.InitializeWriterWithOptions(new(fakeWriter), serviceContext, serviceOptions)
+
 	logger := loggerSvc.NewContext("ExampleLogContext", "Write")
 
 	// Here we simulate hooking the LogContext into the an existing std/logger.
@@ -142,5 +186,5 @@ func ExampleLogContext_Write() {
 
 	loggerSvc.Finish()
 
-	// Output: {"timestamp":"1234567890123456789","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"ExampleLogContext","operation":"Write","level":"100","severity":"trace","msg":"Hello from the standard library logger!\n","details":""}
+	// Output: {"timestamp":"2009-01-20T12:05:00.000000-04:00","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"ExampleLogContext","operation":"Write","level":"100","severity":"trace","msg":"Hello from the standard library logger!\n","details":""}
 }
