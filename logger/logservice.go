@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+// 64kib is the initial allocation for the message buffer, as this matches the
+// theorhtical (max) MTU for UDP transmissions.
+const initialMsgBufferAllocation = 64 * 1024
+
 // ServiceContext defines structural log elements that are applied to every
 // log entry from this log service instance.
 type ServiceContext struct {
@@ -144,8 +148,7 @@ func (ls *LogService) writeEntry(msg []byte) {
 func (ls *LogService) NewContext(site, operation string) LogContext {
 	return LogContext{
 		logService: ls,
-		TODO: this should be a constant with some explanation that it the default udp mtu
-		buffer:     make([]byte, 65000, 65000),
+		buffer:     make([]byte, initialMsgBufferAllocation),
 		Site:       escape(site),
 		Operation:  escape(operation),
 	}

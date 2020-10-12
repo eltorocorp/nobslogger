@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/eltorocorp/nobslogger/logger"
 )
@@ -30,7 +31,9 @@ func ExampleInitializeWriter() {
 	}
 
 	// Initialize the LogService.
-	loggerSvc := logger.InitializeWriter(new(fakeWriter), serviceContext)
+	loggerSvc := logger.InitializeWriterWithOptions(new(fakeWriter), serviceContext, logger.LogServiceOptions{
+		CancellationDeadline: 1 * time.Second,
+	})
 
 	// Get a new logger (LogContext) from the LogService.
 	logger := loggerSvc.NewContext("ExampleInitializeWriter_ServiceContext", "running example")

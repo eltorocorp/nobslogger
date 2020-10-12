@@ -7,7 +7,7 @@ NobSlogger. A fast, opinionated, lightweight, no-BS, static-structured/leveled l
 [![Coverage](http://gocover.io/_badge/github.com/eltorocorp/nobslogger/logger)](http://gocover.io/github.com/eltorocorp/nobslogger/logger)
 
 No BS:
- - NobSlogger doesn't try to bend to everybody's idea of what should be logged and how it should be structured.
+ - NobSlogger is opinionated. 
  - It has a staticly structured log format that is focused on use for microservice activity logs.
  - It is focused on providing structured information that helps identify what is happening, where it is happening, and in what order it is happening, so that issues can be identified quickly.
  - If you want more flexibility on which fields you want to log or how they are formatted, use Zap or Zerolog.
@@ -59,7 +59,7 @@ Each structural level presents progressively more detail about the context withi
 ## Log Entry Level
 *Values that are specific to a discrete log entry.*
 
-- Timestamp: *A 64 bit UTC unixnano timestamp. This value is numeric because that is faster than providing a formatted value.*
+- Timestamp: *RFC33339Nano (2006-01-02T15:04:05.999999999Z07:00)*
 - Message: *A concrete message describing system state.*
 - Detail: *Additional information in support of the message.*
 - Severity: *A value describing the nature of the log message. One of trace, debug, info, warn, error, or fatal.*
