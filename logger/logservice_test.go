@@ -124,14 +124,17 @@ func TestLogServiceEscapesJSON(t *testing.T) {
 					},
 				)
 
-			logService := logger.InitializeWriter(writer, logger.ServiceContext{
-				Environment:       s,
-				ServiceInstanceID: s,
-				ServiceName:       s,
-				SystemName:        s,
-			})
+			logService := logger.InitializeWriterWithOptions(writer,
+				logger.ServiceContext{
+					Environment:       s,
+					ServiceInstanceID: s,
+					ServiceName:       s,
+					SystemName:        s,
+				}, logger.LogServiceOptions{
+					CancellationDeadline: 10 * time.Millisecond,
+				})
 			log := logService.NewContext(s, s)
-			log.InfoD(s, s)
+			log.InfoJ(s, s)
 			logService.Finish()
 		}
 		t.Run("rune:"+s, f)

@@ -3,16 +3,7 @@ package logger
 import (
 	"runtime"
 	"sync/atomic"
-	"time"
-
-	"github.com/kpango/fastime"
 )
-
-func init() {
-	// If changing the output format, be sure to also update the serializer, as
-	// it is expecting a 32 byte value.
-	fastime.SetFormat(time.RFC3339Nano)
-}
 
 // LogContext defines high level information for a structured log entry.
 // Information in LogContext is applicable to multiple log calls, and describe
@@ -33,14 +24,10 @@ type LogContext struct {
 
 // Trace logs the most granular information about system state.
 func (l *LogContext) Trace(message string) {
-	l.submit(l.logService.serviceContext, l, LogDetail{
-		Level:    LogLevelTrace,
-		Severity: LogSeverityTrace,
-		Message:  message,
-	})
+	l.TraceD(message, "")
 }
 
-// TraceD logs the most granular about system state along with extra
+// TraceD logs the most granular information about system state along with extra
 // detail.
 func (l *LogContext) TraceD(message, details string) {
 	l.submit(l.logService.serviceContext, l, LogDetail{
@@ -51,13 +38,15 @@ func (l *LogContext) TraceD(message, details string) {
 	})
 }
 
+// TraceJ logs the most granular information about system state along with extra
+// detail, while also escaping all reserved JSON characters.
+func (l *LogContext) TraceJ(message, details string) {
+	l.TraceD(escape(message), escape(details))
+}
+
 // Debug logs fairly graunlar information about system state.
 func (l *LogContext) Debug(message string) {
-	l.submit(l.logService.serviceContext, l, LogDetail{
-		Level:    LogLevelDebug,
-		Severity: LogSeverityDebug,
-		Message:  message,
-	})
+	l.DebugD(message, "")
 }
 
 // DebugD logs relatively detailed information about system state along with
@@ -71,13 +60,15 @@ func (l *LogContext) DebugD(message, details string) {
 	})
 }
 
+// DebugJ logs relatively detailed information about system state along with
+// extra detail, while also escaping all reserved JSON characters.
+func (l *LogContext) DebugJ(message, details string) {
+	l.DebugD(escape(message), escape(details))
+}
+
 // Info logs general informational messages useful for describing system state.
 func (l *LogContext) Info(message string) {
-	l.submit(l.logService.serviceContext, l, LogDetail{
-		Level:    LogLevelInfo,
-		Severity: LogSeverityInfo,
-		Message:  message,
-	})
+	l.InfoD(message, "")
 }
 
 // InfoD logs general informational messages useful for describing system state
@@ -91,13 +82,15 @@ func (l *LogContext) InfoD(message, details string) {
 	})
 }
 
+// InfoJ logs general informational messages useful for describing system state
+// along with extra detail, while also escaping all reserved JSON characters.
+func (l *LogContext) InfoJ(message, details string) {
+	l.InfoD(escape(message), escape(details))
+}
+
 // Warn logs information about potentially harmful situations of interest.
 func (l *LogContext) Warn(message string) {
-	l.submit(l.logService.serviceContext, l, LogDetail{
-		Level:    LogLevelWarn,
-		Severity: LogSeverityWarn,
-		Message:  message,
-	})
+	l.WarnD(message, "")
 }
 
 // WarnD logs information about potentially harmful situations of interest along
@@ -111,14 +104,16 @@ func (l *LogContext) WarnD(message, details string) {
 	})
 }
 
+// WarnJ logs information about potentially harmful situations of interest along
+// with extra detail, while also escaping all reserved JSON characters.
+func (l *LogContext) WarnJ(message, details string) {
+	l.WarnD(escape(message), escape(details))
+}
+
 // Error logs events of considerable importance that will prevent normal program
 // execution, but might still allow the application to continue running.
 func (l *LogContext) Error(message string) {
-	l.submit(l.logService.serviceContext, l, LogDetail{
-		Level:    LogLevelError,
-		Severity: LogSeverityError,
-		Message:  message,
-	})
+	l.ErrorD(message, "")
 }
 
 // ErrorD logs events of considerable importance that will prevent normal program
@@ -133,14 +128,17 @@ func (l *LogContext) ErrorD(message, details string) {
 	})
 }
 
+// ErrorJ logs events of considerable importance that will prevent normal program
+// execution, but might still allow the application to continue running along
+// with extra detail, while also escaping all reserved JSON characters.
+func (l *LogContext) ErrorJ(message, details string) {
+	l.ErrorD(escape(message), escape(details))
+}
+
 // Fatal logs the most severe events. Fatal events are likely to have caused
 // a service to terminate.
 func (l *LogContext) Fatal(message string) {
-	l.submit(l.logService.serviceContext, l, LogDetail{
-		Level:    LogLevelFatal,
-		Severity: LogSeverityFatal,
-		Message:  message,
-	})
+	l.FatalD(message, "")
 }
 
 // FatalD logs the most severe events. Fatal events are likely to have caused
@@ -152,6 +150,12 @@ func (l *LogContext) FatalD(message, details string) {
 		Message:  message,
 		Details:  details,
 	})
+}
+
+// FatalJ logs the most severe events. Fatal events are likely to have caused
+// a service to terminate, while also escaping all reserved JSON characters.
+func (l *LogContext) FatalJ(message, details string) {
+	l.FatalD(escape(message), escape(details))
 }
 
 // Write enables this context to be used as an io.Writer.
@@ -178,78 +182,3 @@ func (l LogContext) submit(sc *ServiceContext, lc *LogContext, ld LogDetail) {
 	atomic.SwapInt32(&l.logService.locked, 0)
 	atomic.AddUint32(&l.logService.waiters, ^uint32(0))
 }
-
-func serialize(buffer []byte, sc *ServiceContext, lc *LogContext, ld LogDetail) (offset int) {
-	// Avoiding a loop-construct saves a few cycles.
-	// Since we're being opinionated and know ahead of time how many fields
-	// we're processing, we can just explicitly construct the outbound message
-	// token by token.
-	// Verify with benchmarks if altering this section.
-	offset += copy(buffer[offset:offset+len(braceOpenToken)], braceOpenToken)
-	offset += copy(buffer[offset:offset+len(timestampToken)], timestampToken)
-	offset += copy(buffer[offset:offset+len(fieldOpenToken)], fieldOpenToken)
-	// init function sets format to rfc3339nano, which is always 35 bytes long.
-	offset += copy(buffer[offset:offset+32], fastime.FormattedNow())
-	offset += copy(buffer[offset:offset+len(fieldCloseToken)], fieldCloseToken)
-	offset += copy(buffer[offset:offset+len(environmentToken)], environmentToken)
-	offset += copy(buffer[offset:offset+len(fieldOpenToken)], fieldOpenToken)
-	offset += copy(buffer[offset:offset+len(sc.Environment)], sc.Environment)
-	offset += copy(buffer[offset:offset+len(fieldCloseToken)], fieldCloseToken)
-	offset += copy(buffer[offset:offset+len(systemNameToken)], systemNameToken)
-	offset += copy(buffer[offset:offset+len(fieldOpenToken)], fieldOpenToken)
-	offset += copy(buffer[offset:offset+len(sc.SystemName)], sc.SystemName)
-	offset += copy(buffer[offset:offset+len(fieldCloseToken)], fieldCloseToken)
-	offset += copy(buffer[offset:offset+len(serviceNameToken)], serviceNameToken)
-	offset += copy(buffer[offset:offset+len(fieldOpenToken)], fieldOpenToken)
-	offset += copy(buffer[offset:offset+len(sc.ServiceName)], sc.ServiceName)
-	offset += copy(buffer[offset:offset+len(fieldCloseToken)], fieldCloseToken)
-	offset += copy(buffer[offset:offset+len(serviceInstanceIDToken)], serviceInstanceIDToken)
-	offset += copy(buffer[offset:offset+len(fieldOpenToken)], fieldOpenToken)
-	offset += copy(buffer[offset:offset+len(sc.ServiceInstanceID)], sc.ServiceInstanceID)
-	offset += copy(buffer[offset:offset+len(fieldCloseToken)], fieldCloseToken)
-	offset += copy(buffer[offset:offset+len(siteToken)], siteToken)
-	offset += copy(buffer[offset:offset+len(fieldOpenToken)], fieldOpenToken)
-	offset += copy(buffer[offset:offset+len(lc.Site)], lc.Site)
-	offset += copy(buffer[offset:offset+len(fieldCloseToken)], fieldCloseToken)
-	offset += copy(buffer[offset:offset+len(operationToken)], operationToken)
-	offset += copy(buffer[offset:offset+len(fieldOpenToken)], fieldOpenToken)
-	offset += copy(buffer[offset:offset+len(lc.Operation)], lc.Operation)
-	offset += copy(buffer[offset:offset+len(fieldCloseToken)], fieldCloseToken)
-	offset += copy(buffer[offset:offset+len(levelToken)], levelToken)
-	offset += copy(buffer[offset:offset+len(fieldOpenToken)], fieldOpenToken)
-	offset += copy(buffer[offset:offset+len(string(ld.Level))], string(ld.Level))
-	offset += copy(buffer[offset:offset+len(fieldCloseToken)], fieldCloseToken)
-	offset += copy(buffer[offset:offset+len(severityToken)], severityToken)
-	offset += copy(buffer[offset:offset+len(fieldOpenToken)], fieldOpenToken)
-	offset += copy(buffer[offset:offset+len(string(ld.Severity))], string(ld.Severity))
-	offset += copy(buffer[offset:offset+len(fieldCloseToken)], fieldCloseToken)
-	offset += copy(buffer[offset:offset+len(messageToken)], messageToken)
-	offset += copy(buffer[offset:offset+len(fieldOpenToken)], fieldOpenToken)
-	offset += copy(buffer[offset:offset+len(ld.Message)], ld.Message)
-	offset += copy(buffer[offset:offset+len(fieldCloseToken)], fieldCloseToken)
-	offset += copy(buffer[offset:offset+len(detailsToken)], detailsToken)
-	offset += copy(buffer[offset:offset+len(fieldOpenToken)], fieldOpenToken)
-	offset += copy(buffer[offset:offset+len(ld.Details)], ld.Details)
-	offset += copy(buffer[offset:offset+len(finalFieldCloseToken)], finalFieldCloseToken)
-	offset += copy(buffer[offset:offset+len(braceCloseToken)], braceCloseToken)
-	return
-}
-
-const (
-	braceOpenToken         = "{"
-	braceCloseToken        = "}"
-	fieldOpenToken         = ":\""
-	fieldCloseToken        = "\","
-	finalFieldCloseToken   = "\""
-	timestampToken         = "\"timestamp\""
-	environmentToken       = "\"environment\""
-	systemNameToken        = "\"system_name\""
-	serviceNameToken       = "\"service_name\""
-	serviceInstanceIDToken = "\"service_instance_id\""
-	levelToken             = "\"level\""
-	severityToken          = "\"severity\""
-	siteToken              = "\"site\""
-	operationToken         = "\"operation\""
-	messageToken           = "\"msg\""
-	detailsToken           = "\"details\""
-)
