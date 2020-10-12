@@ -3,6 +3,9 @@ package logger
 import (
 	"runtime"
 	"sync/atomic"
+	"time"
+
+	"github.com/kpango/fastime"
 )
 
 // LogContext defines high level information for a structured log entry.
@@ -154,8 +157,11 @@ func (l LogContext) Write(message []byte) (int, error) {
 	return len(message), nil
 }
 
+func init() {
+	fastime.SetFormat(time.RFC3339Nano)
+}
+
 func (l LogContext) submit(sc *ServiceContext, lc *LogContext, ld LogDetail) {
-	// ld.Timestamp = strconv.FormatInt(time.Now().UTC().UnixNano(), 10)
 	atomic.AddUint32(&l.logService.waiters, 1)
 	for {
 		if atomic.CompareAndSwapInt32(&l.logService.locked, 0, 1) {
@@ -175,7 +181,7 @@ func (l LogContext) submit(sc *ServiceContext, lc *LogContext, ld LogDetail) {
 	offset += copy(lc.buffer[offset:offset+len(braceOpenToken)], braceOpenToken)
 	offset += copy(lc.buffer[offset:offset+len(timestampToken)], timestampToken)
 	offset += copy(lc.buffer[offset:offset+len(fieldOpenToken)], fieldOpenToken)
-	offset += copy(lc.buffer[offset:offset+len(ld.Timestamp)], ld.Timestamp)
+	offset += copy(lc.buffer[offset:offset+35], fastime.FormattedNow())
 	offset += copy(lc.buffer[offset:offset+len(fieldCloseToken)], fieldCloseToken)
 	offset += copy(lc.buffer[offset:offset+len(environmentToken)], environmentToken)
 	offset += copy(lc.buffer[offset:offset+len(fieldOpenToken)], fieldOpenToken)
