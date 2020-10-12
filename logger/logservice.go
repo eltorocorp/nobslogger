@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"sync/atomic"
 	"time"
 )
 
@@ -32,6 +33,8 @@ type LogServiceOptions struct {
 
 	// TimeBetweenFlushAttempts is deprecated.
 	TimeBetweenFlushAttempts time.Duration
+
+	CancellationDeadline time.Duration
 }
 
 func defaultLogServiceOptions() LogServiceOptions {
@@ -45,7 +48,8 @@ func defaultLogServiceOptions() LogServiceOptions {
 // upstream UDP endpoint.
 type LogService struct {
 	messageBuffer  string
-	locked         bool
+	locked         int32
+	waiters        uint32
 	serviceContext *ServiceContext
 	options        LogServiceOptions
 	logWriter      io.Writer
@@ -111,7 +115,8 @@ func InitializeWriterWithOptions(w io.Writer, serviceContext ServiceContext, opt
 
 	ls := LogService{
 		messageBuffer:  string(b),
-		locked:         false,
+		locked:         0,
+		waiters:        0,
 		serviceContext: &serviceContext,
 		options:        options,
 		logWriter:      w,
@@ -157,10 +162,18 @@ func (ls *LogService) NewContext(site, operation string) LogContext {
 	}
 }
 
-// Cancel is deprecated.
-func (ls *LogService) Cancel() {
-}
-
-// Wait is deprecated.
-func (ls *LogService) Wait() {
+// Finish sets a deadline for any concurrent LogContexts to finish sending any
+// remaining messages.
+func (ls *LogService) Finish() {
+	deadline := time.Now().Add(ls.options.CancellationDeadline)
+	for {
+		if time.Now().Before(deadline) {
+			continue
+		}
+		if atomic.LoadUint32(&ls.waiters) > 0 {
+			deadline = time.Now().Add(ls.options.CancellationDeadline)
+			continue
+		}
+		return
+	}
 }

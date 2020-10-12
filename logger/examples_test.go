@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"time"
 
 	"github.com/eltorocorp/nobslogger/logger"
 )
@@ -39,14 +38,7 @@ func ExampleInitializeWriter() {
 	// Log something.
 	logger.Info("Here is some info")
 
-	// Calling Cancel signals to the LogService to begin flushing the internal
-	// log queue.
-	loggerSvc.Cancel()
-
-	// Wait always blocks while the LogService is active, and will only unblock
-	// after the Cancel method has been called and has finished flusing the
-	// log message queue.
-	loggerSvc.Wait()
+	loggerSvc.Finish()
 
 	// Output: {"timestamp":"1234567890123456789","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"ExampleInitializeWriter_ServiceContext","operation":"running example","level":"300","severity":"info","msg":"Here is some info","details":""}
 }
@@ -72,8 +64,7 @@ func ExampleLogService_multipleContexts() {
 		logger.Info("Here is some info from goroutine 2")
 	}()
 
-	loggerSvc.Cancel()
-	loggerSvc.Wait()
+	loggerSvc.Finish()
 }
 
 // LogService supports having one (or more) log contexts span multiple
@@ -98,35 +89,7 @@ func ExampleLogService_contextAcrossGoroutines() {
 		logger.Info("Log from goroutine 3")
 	}()
 
-	loggerSvc.Cancel()
-	loggerSvc.Wait()
-}
-
-// LogService supports cancellation from a separate goroutine from where the
-// service was originally initialized.
-func ExampleLogService_cancelFromSeparateGoroutine() {
-	serviceContext := logger.ServiceContext{
-		Environment:       "test",
-		SystemName:        "examples",
-		ServiceName:       "example runner",
-		ServiceInstanceID: "1",
-	}
-	loggerSvc := logger.InitializeWriter(new(fakeWriter), serviceContext)
-	logger := loggerSvc.NewContext("single context", "used across multiple goroutines")
-
-	go func() {
-		for {
-			logger.Warn("infinite loop")
-			time.Sleep(1 * time.Second)
-		}
-	}()
-
-	go func() {
-		logger.Info("Cancelling")
-		loggerSvc.Cancel()
-	}()
-
-	loggerSvc.Wait()
+	loggerSvc.Finish()
 }
 
 // LogService contexts support a vartiety of log methods, including, but not
@@ -147,8 +110,7 @@ func ExampleLogService_variousContextMethods() {
 	logger.Debug("A debug-level message")
 	logger.DebugD("A debug-level message.", "With extra details!")
 
-	loggerSvc.Cancel()
-	loggerSvc.Wait()
+	loggerSvc.Finish()
 }
 
 // LogContexts also support the io.Writer interface, so they can be used to
@@ -175,8 +137,7 @@ func ExampleLogContext_Write() {
 	// nobslogger to prevent mangling the JSON output.
 	stdlibLogger.Println("Hello from the standard library logger!")
 
-	loggerSvc.Cancel()
-	loggerSvc.Wait()
+	loggerSvc.Finish()
 
 	// Output: {"timestamp":"1234567890123456789","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"ExampleLogContext","operation":"Write","level":"100","severity":"trace","msg":"Hello from the standard library logger!\n","details":""}
 }

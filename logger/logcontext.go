@@ -2,6 +2,7 @@ package logger
 
 import (
 	"strconv"
+	"sync/atomic"
 	"time"
 )
 
@@ -155,11 +156,11 @@ func (l LogContext) Write(message []byte) (int, error) {
 
 func (l LogContext) submit(sc *ServiceContext, lc *LogContext, ld LogDetail) {
 	ld.Timestamp = strconv.FormatInt(time.Now().UTC().UnixNano(), 10)
+	atomic.AddUint32(&l.logService.waiters, 1)
 	for {
-		if l.logService.locked {
+		if !atomic.CompareAndSwapInt32(&l.logService.locked, 0, 1) {
 			continue
 		}
-		l.logService.locked = true
 		l.logService.messageBuffer = braceOpenToken +
 			timestampToken + fieldOpenToken + ld.Timestamp + fieldCloseToken +
 			environmentToken + fieldOpenToken + sc.Environment + fieldCloseToken +
@@ -174,7 +175,8 @@ func (l LogContext) submit(sc *ServiceContext, lc *LogContext, ld LogDetail) {
 			detailsToken + fieldOpenToken + escape(ld.Details) + finalFieldCloseToken +
 			braceCloseToken
 		l.logService.writeEntry()
-		l.logService.locked = false
+		atomic.SwapInt32(&l.logService.locked, 0)
+		atomic.AddUint32(&l.logService.waiters, ^uint32(0))
 		break
 	}
 }
