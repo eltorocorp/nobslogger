@@ -103,10 +103,10 @@ func InitializeWriter(writer io.Writer, serviceContext ServiceContext) LogServic
 // InitializeWriterWithOptions is the same as InitializeWriter, but with custom
 // LogServiceOptions supplied. See InitializeWriter.
 func InitializeWriterWithOptions(w io.Writer, serviceContext ServiceContext, options LogServiceOptions) LogService {
-	// serviceContext.Environment = escape(serviceContext.Environment)
-	// serviceContext.ServiceInstanceID = escape(serviceContext.ServiceInstanceID)
-	// serviceContext.ServiceName = escape(serviceContext.ServiceName)
-	// serviceContext.SystemName = escape(serviceContext.SystemName)
+	serviceContext.Environment = escape(serviceContext.Environment)
+	serviceContext.ServiceInstanceID = escape(serviceContext.ServiceInstanceID)
+	serviceContext.ServiceName = escape(serviceContext.ServiceName)
+	serviceContext.SystemName = escape(serviceContext.SystemName)
 
 	ls := LogService{
 		locked:         0,
@@ -152,8 +152,8 @@ func (ls *LogService) NewContext(site, operation string) LogContext {
 	return LogContext{
 		logService: ls,
 		buffer:     make([]byte, 65000, 65000),
-		Site:       site,
-		Operation:  operation,
+		Site:       escape(site),
+		Operation:  escape(operation),
 	}
 }
 

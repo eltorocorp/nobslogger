@@ -1,16 +1,16 @@
 goos: darwin
 goarch: amd64
 pkg: go.uber.org/zap/benchmarks
-BenchmarkAccumulatedContext/Zap-4         	 2651587	       427 ns/op	       0 B/op	       0 allocs/op
-BenchmarkAccumulatedContext/Zap.Check-4   	 2763753	       423 ns/op	       0 B/op	       0 allocs/op
-BenchmarkAccumulatedContext/Zap.Sugar-4   	 1971543	       576 ns/op	      80 B/op	       2 allocs/op
-BenchmarkAccumulatedContext/apex/log-4    	  115863	      9335 ns/op	    1417 B/op	      25 allocs/op
-BenchmarkAccumulatedContext/go-kit/kit/log-4         	  406054	      2915 ns/op	    1648 B/op	      24 allocs/op
-BenchmarkAccumulatedContext/inconshreveable/log15-4  	   90638	     15537 ns/op	    2183 B/op	      31 allocs/op
-BenchmarkAccumulatedContext/sirupsen/logrus-4        	  100768	     12084 ns/op	    2112 B/op	      37 allocs/op
-BenchmarkAccumulatedContext/rs/zerolog-4             	 3596152	       343 ns/op	       0 B/op	       0 allocs/op
-BenchmarkAccumulatedContext/rs/zerolog.Check-4       	 3541352	       333 ns/op	       0 B/op	       0 allocs/op
-BenchmarkAccumulatedContext/eltorocorp/logger.Info-4 	 4175052	       296 ns/op	       0 B/op	       0 allocs/op
-BenchmarkAccumulatedContext/eltorocorp/logger.InfoD-4         	 3933325	       304 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccumulatedContext/Zap-4         	 2690827	       442 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccumulatedContext/Zap.Check-4   	 2490915	       458 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccumulatedContext/Zap.Sugar-4   	 1947295	       617 ns/op	      80 B/op	       2 allocs/op
+BenchmarkAccumulatedContext/apex/log-4    	  142443	      8747 ns/op	    1417 B/op	      25 allocs/op
+BenchmarkAccumulatedContext/go-kit/kit/log-4         	  376610	      2916 ns/op	    1648 B/op	      24 allocs/op
+BenchmarkAccumulatedContext/inconshreveable/log15-4  	   93661	     13276 ns/op	    2183 B/op	      31 allocs/op
+BenchmarkAccumulatedContext/sirupsen/logrus-4        	  105096	     11891 ns/op	    2112 B/op	      37 allocs/op
+BenchmarkAccumulatedContext/rs/zerolog-4             	 3619669	       334 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccumulatedContext/rs/zerolog.Check-4       	 3375819	       336 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccumulatedContext/eltorocorp/logger.Info-4 	 1708459	       692 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccumulatedContext/eltorocorp/logger.InfoD-4         	 1000000	      1100 ns/op	       0 B/op	       0 allocs/op
 PASS
-ok  	go.uber.org/zap/benchmarks	16.686s
+ok  	go.uber.org/zap/benchmarks	16.565s
