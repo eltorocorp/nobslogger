@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"runtime"
 	"sync/atomic"
 )
 
@@ -160,9 +161,17 @@ func (l LogContext) submit(sc *ServiceContext, lc *LogContext, ld LogDetail) {
 		if atomic.CompareAndSwapInt32(&l.logService.locked, 0, 1) {
 			break
 		}
+		// Need to give other goroutines a chance to execute. Consider
+		// benchmarks before altering this call.
+		runtime.Gosched()
 	}
-	offset := 0
 
+	// Avoiding a loop-construct saves a few cycles.
+	// Since we're being opinionated and know ahead of time how many fields
+	// we're processing, we can just explicitly construct the outbound message
+	// token by token.
+	// Verify with benchmarks before altering this section.
+	offset := 0
 	offset += copy(lc.buffer[offset:offset+len(braceOpenToken)], braceOpenToken)
 	offset += copy(lc.buffer[offset:offset+len(timestampToken)], timestampToken)
 	offset += copy(lc.buffer[offset:offset+len(fieldOpenToken)], fieldOpenToken)
@@ -233,25 +242,3 @@ const (
 	messageToken           = "\"msg\""
 	detailsToken           = "\"details\""
 )
-
-// // Serialize marshals the LogEntry into a JSON format.
-// // This method constructs the JSON response manually just for the sake of being
-// // no bullshit and really fast. This is less cute than using higher abstractions
-// // but is also ~140 times faster than `json.MarshalIndent`, ~30 times faster
-// // than `json.Marhsal`, and ~20 times faster than `fmt.Sprintf`.
-// func (le LogEntry) Serialize() []byte {
-// 	// JSON escapement: See TestLogServiceEscapesJSON
-// 	return []byte(braceOpenToken +
-// 		timestampToken + fieldOpenToken + le.Timestamp + fieldCloseToken +
-// 		environmentToken + fieldOpenToken + le.Environment + fieldCloseToken +
-// 		systemNameToken + fieldOpenToken + le.SystemName + fieldCloseToken +
-// 		serviceNameToken + fieldOpenToken + le.ServiceName + fieldCloseToken +
-// 		serviceInstanceIDToken + fieldOpenToken + le.ServiceInstanceID + fieldCloseToken +
-// 		siteToken + fieldOpenToken + le.Site + fieldCloseToken +
-// 		operationToken + fieldOpenToken + le.Operation + fieldCloseToken +
-// 		levelToken + fieldOpenToken + string(le.Level) + fieldCloseToken +
-// 		severityToken + fieldOpenToken + string(le.Severity) + fieldCloseToken +
-// 		messageToken + fieldOpenToken + escape(le.Message) + fieldCloseToken +
-// 		detailsToken + fieldOpenToken + escape(le.Details) + finalFieldCloseToken +
-// 		braceCloseToken)
-// }
