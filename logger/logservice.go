@@ -26,19 +26,12 @@ type ServiceContext struct {
 
 // LogServiceOptions exposes configuration settings for LogService behavior.
 type LogServiceOptions struct {
-	// MaxFlushAttempts is deprecated.
-	MaxFlushAttempts int
-
-	// TimeBetweenFlushAttempts is deprecated.
-	TimeBetweenFlushAttempts time.Duration
-
 	CancellationDeadline time.Duration
 }
 
 func defaultLogServiceOptions() LogServiceOptions {
 	return LogServiceOptions{
-		MaxFlushAttempts:         10,
-		TimeBetweenFlushAttempts: 10 * time.Millisecond,
+		CancellationDeadline: 30 * time.Second,
 	}
 }
 
@@ -151,6 +144,7 @@ func (ls *LogService) writeEntry(msg []byte) {
 func (ls *LogService) NewContext(site, operation string) LogContext {
 	return LogContext{
 		logService: ls,
+		TODO: this should be a constant with some explanation that it the default udp mtu
 		buffer:     make([]byte, 65000, 65000),
 		Site:       escape(site),
 		Operation:  escape(operation),

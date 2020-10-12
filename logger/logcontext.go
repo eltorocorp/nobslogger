@@ -8,6 +8,12 @@ import (
 	"github.com/kpango/fastime"
 )
 
+func init() {
+	// If changing the output format, be sure to also update the serializer, as
+	// it is expecting a 35 byte value.
+	fastime.SetFormat(time.RFC3339Nano)
+}
+
 // LogContext defines high level information for a structured log entry.
 // Information in LogContext is applicable to multiple log calls, and describe
 // the general environment in which a series of related log calls will be made.
@@ -157,18 +163,14 @@ func (l LogContext) Write(message []byte) (int, error) {
 	return len(message), nil
 }
 
-func init() {
-	fastime.SetFormat(time.RFC3339Nano)
-}
-
 func (l LogContext) submit(sc *ServiceContext, lc *LogContext, ld LogDetail) {
 	atomic.AddUint32(&l.logService.waiters, 1)
 	for {
 		if atomic.CompareAndSwapInt32(&l.logService.locked, 0, 1) {
 			break
 		}
-		// Need to give other goroutines a chance to execute. Consider
-		// benchmarks before altering this call.
+		// Need to give other goroutines a chance to execute. Verify
+		// benchmarks if altering this call.
 		runtime.Gosched()
 	}
 
@@ -176,11 +178,12 @@ func (l LogContext) submit(sc *ServiceContext, lc *LogContext, ld LogDetail) {
 	// Since we're being opinionated and know ahead of time how many fields
 	// we're processing, we can just explicitly construct the outbound message
 	// token by token.
-	// Verify with benchmarks before altering this section.
+	// Verify with benchmarks if altering this section.
 	offset := 0
 	offset += copy(lc.buffer[offset:offset+len(braceOpenToken)], braceOpenToken)
 	offset += copy(lc.buffer[offset:offset+len(timestampToken)], timestampToken)
 	offset += copy(lc.buffer[offset:offset+len(fieldOpenToken)], fieldOpenToken)
+	// init function sets format to rfc3339nano, which is always 35 bytes long.
 	offset += copy(lc.buffer[offset:offset+35], fastime.FormattedNow())
 	offset += copy(lc.buffer[offset:offset+len(fieldCloseToken)], fieldCloseToken)
 	offset += copy(lc.buffer[offset:offset+len(environmentToken)], environmentToken)
