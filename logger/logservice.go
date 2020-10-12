@@ -151,6 +151,7 @@ func (ls *LogService) writeEntry(msg []byte) {
 func (ls *LogService) NewContext(site, operation string) LogContext {
 	return LogContext{
 		logService: ls,
+		buffer:     make([]byte, 65000, 65000),
 		Site:       site,
 		Operation:  operation,
 	}
