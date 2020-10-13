@@ -1,0 +1,16 @@
+goos: darwin
+goarch: amd64
+pkg: go.uber.org/zap/benchmarks
+BenchmarkAccumulatedContext/Zap-4         	 2432160	       476 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccumulatedContext/Zap.Check-4   	 2509574	       505 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccumulatedContext/Zap.Sugar-4   	 1530488	       971 ns/op	      80 B/op	       2 allocs/op
+BenchmarkAccumulatedContext/apex/log-4    	  173862	      8199 ns/op	    1417 B/op	      25 allocs/op
+BenchmarkAccumulatedContext/go-kit/kit/log-4         	  427189	      3189 ns/op	    1648 B/op	      24 allocs/op
+BenchmarkAccumulatedContext/inconshreveable/log15-4  	  134672	      9620 ns/op	    2183 B/op	      31 allocs/op
+BenchmarkAccumulatedContext/sirupsen/logrus-4        	  134131	      8556 ns/op	    2112 B/op	      37 allocs/op
+BenchmarkAccumulatedContext/rs/zerolog-4             	 3192627	       357 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccumulatedContext/rs/zerolog.Check-4       	 3187870	       355 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccumulatedContext/eltorocorp/logger.Info-4 	 3553672	       309 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccumulatedContext/eltorocorp/logger.InfoD-4         	 3815476	       324 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	go.uber.org/zap/benchmarks	20.609s
