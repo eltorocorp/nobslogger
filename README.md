@@ -34,8 +34,7 @@ NobSlogger is very opinionated. And it is fast as a result\*.
 |sirupsen/logrus-4        |8556  ns/op| 2669%|37  allocs/op|
 |inconshreveable/log15-4  |9620  ns/op| 3013%|31  allocs/op|
 
-> *\*NobSlogger's benchmarks are based on the accumulated context benchmark suite used by the Zap and Zerolog loggers.
-Since NobSlogger is so much more opinionated than Zap and Zerolog, the other benchmarks they often use to compare eachother don't apply well to NobSlogger. However, the accumulated context benchmark suite is a fair representation of what is likely the most apples to apples use case between all three systems.*
+> *\*NobSlogger's benchmarks are based on the accumulated context benchmark suite used by the Zap and Zerolog loggers. Additional benchmarks (single field, and adding fields) are available in the benchmarks directory. 
 
 # Log Structure
 As mentioned in the No BS section above, NobSlogger gets its performance by being very opinionated about what constitutes a log entry. It does not try to be all things to all people, but does succeed at doing what will work for most scenarios really well.
@@ -59,7 +58,7 @@ Each structural level presents progressively more detail about the context withi
 ## Log Entry Level
 *Values that are specific to a discrete log entry.*
 
-- Timestamp: *RFC33339Nano (2006-01-02T15:04:05.999999999Z07:00)*
+- Timestamp: *RFC3339Nano (2006-01-02T15:04:05.999999999Z07:00)*
 - Message: *A concrete message describing system state.*
 - Detail: *Additional information in support of the message.*
 - Severity: *A value describing the nature of the log message. One of trace, debug, info, warn, error, or fatal.*

@@ -53,9 +53,8 @@ type LogService struct {
 }
 
 // InitializeUDP establishes a connection to a specified UDP server (such as
-// logstash), starts an internal log message poller, and returns a LogService
-// instance through which more detailed logging contexts can be spawned (see
-// NewContext)
+// logstash),  and returns a LogService instance through which more detailed
+// logging contexts can be spawned (see NewContext)
 //
 // This function will panic if an error occurs while establishing the connection
 // to the UDP server.
@@ -92,10 +91,8 @@ func InitializeUDPWithOptions(hostURI string, serviceContext ServiceContext, opt
 	return InitializeWriterWithOptions(cn, serviceContext, options)
 }
 
-// InitializeWriter publishes logs via the provided io.Writer.
-//
-// InitializeWriter initiates a long-poll operation that transmits log messages
-// to the specified writer any time a log message is available to write.
+// InitializeWriter establishes a logging service that transmits logs to the
+// provided io.Writer.
 func InitializeWriter(writer io.Writer, serviceContext ServiceContext) LogService {
 	return InitializeWriterWithOptions(writer, serviceContext, defaultLogServiceOptions())
 }
@@ -167,7 +164,19 @@ func (ls *LogService) NewContext(site, operation string) LogContext {
 }
 
 // Finish sets a deadline for any concurrent LogContexts to finish sending any
-// remaining messages.
+// remaining messages; then blocks until that deadline has expired.
+// Finish will reset its internal deadline if any messages are received during
+// the waiting period. Finish will only unblock once the full deadline duration
+// has elapsed with no inbound log activity.
+//
+// Finish makes a good faith attempt to flush all inbound messages during the
+// waiting period. However, it remains the host system's responsibility to wind
+// down all components that might be broadcasting logs to LogContexts before
+// calling Finish.
+//
+// If the host system continues to send log messages to the log service while
+// Finishing, the log service will either a) never exit because it keeps
+// receiving messages or b) exit before all messages have been processed.
 func (ls *LogService) Finish() {
 	deadline := time.Now().Add(ls.options.CancellationDeadline)
 	for {
