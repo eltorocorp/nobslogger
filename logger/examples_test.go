@@ -14,7 +14,7 @@ type fakeWriter struct{}
 // Write just replaces the timestamp internally assigned by the LogService
 // with a constant value so the tests remain deterministic.
 func (fakeWriter) Write(message []byte) (int, error) {
-	re := regexp.MustCompile(`\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}-\d{2}:\d{2}`)
+	re := regexp.MustCompile(`\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.(\d{5}|\d{6})-\d{2}:\d{2}`)
 	msg := re.ReplaceAllString(string(message), "2009-01-20T12:05:00.000000-04:00")
 	fmt.Println(msg)
 	return len(msg), nil
@@ -79,7 +79,7 @@ func ExampleLogService_multipleContexts() {
 
 	loggerSvc.Finish()
 
-	// Output:
+	// Unordered Output:
 	// {"timestamp":"2009-01-20T12:05:00.000000-04:00","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"goroutine 1","operation":"running example","level":"300","severity":"info","msg":"Here is some info from goroutine 1","details":""}
 	// {"timestamp":"2009-01-20T12:05:00.000000-04:00","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"goroutine 2","operation":"running example","level":"300","severity":"info","msg":"Here is some info from goroutine 2","details":""}
 }
@@ -114,7 +114,7 @@ func ExampleLogService_contextAcrossGoroutines() {
 
 	loggerSvc.Finish()
 
-	// Output:
+	// Unordered Output:
 	// {"timestamp":"2009-01-20T12:05:00.000000-04:00","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"single context","operation":"used across multiple goroutines","level":"300","severity":"info","msg":"Log from goroutine 1","details":""}
 	// {"timestamp":"2009-01-20T12:05:00.000000-04:00","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"single context","operation":"used across multiple goroutines","level":"300","severity":"info","msg":"Log from goroutine 2","details":""}
 	// {"timestamp":"2009-01-20T12:05:00.000000-04:00","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"single context","operation":"used across multiple goroutines","level":"300","severity":"info","msg":"Log from goroutine 3","details":""}
@@ -146,7 +146,7 @@ func ExampleLogService_variousContextMethods() {
 
 	loggerSvc.Finish()
 
-	// Output:
+	// Unordered Output:
 	// {"timestamp":"2009-01-20T12:05:00.000000-04:00","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"goroutine 1","operation":"running example","level":"300","severity":"info","msg":"An info-level message.","details":""}
 	// {"timestamp":"2009-01-20T12:05:00.000000-04:00","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"goroutine 1","operation":"running example","level":"300","severity":"info","msg":"An info-level message.","details":"With more details!"}
 	// {"timestamp":"2009-01-20T12:05:00.000000-04:00","environment":"test","system_name":"examples","service_name":"example runner","service_instance_id":"1","site":"goroutine 1","operation":"running example","level":"200","severity":"debug","msg":"A debug-level message","details":""}

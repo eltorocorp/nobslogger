@@ -95,12 +95,15 @@ func TestLogServiceEscapesJSON(t *testing.T) {
 
 	for _, s := range testCases {
 		f := func(t *testing.T) {
+			// 6 standard J methods plus the Write method.
+			const numberOfJMethods = 7
+
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
 			writer := mock_io.NewMockWriter(ctrl)
 			writer.EXPECT().Write(gomock.Any()).
-				AnyTimes().
+				Times(numberOfJMethods).
 				DoAndReturn(
 					func(bb []byte) (int, error) {
 						msg := string(bb)
@@ -134,10 +137,88 @@ func TestLogServiceEscapesJSON(t *testing.T) {
 					CancellationDeadline: 10 * time.Millisecond,
 				})
 			log := logService.NewContext(s, s)
-			log.InfoJ(s, s)
+
+			jsonLogMethods := []func(string, string){
+				log.TraceJ,
+				log.InfoJ,
+				log.DebugJ,
+				log.WarnJ,
+				log.ErrorJ,
+				log.FatalJ,
+			}
+
+			for _, fn := range jsonLogMethods {
+				fn(s, s)
+			}
+
+			// don't forget to excercise the Write method as well as the other
+			// J methods.
+			log.Write([]byte(s))
+
 			logService.Finish()
 		}
 		t.Run("rune:"+s, f)
 	}
 
+}
+
+// Here we're just verifying that all of the context methods result in a call
+// to the underlaying writer.
+func Test_ContextMethodHappyPath(t *testing.T) {
+	// 6 standard methods, 6 D methods, 6 J methods, and 1 Write method.
+	const numberOfLogMethods = 19
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	writer := mock_io.NewMockWriter(ctrl)
+	writer.EXPECT().Write(gomock.Any()).Return(0, nil).Times(numberOfLogMethods)
+
+	loggerService := logger.InitializeWriterWithOptions(writer, logger.ServiceContext{}, logger.LogServiceOptions{})
+	logger := loggerService.NewContext("context site", "operation")
+
+	plainLogMethods := []func(string){
+		logger.Trace,
+		logger.Info,
+		logger.Debug,
+		logger.Warn,
+		logger.Error,
+		logger.Fatal,
+	}
+
+	for _, logMethod := range plainLogMethods {
+		logMethod("test message")
+	}
+
+	detailLogMethods := []func(string, string){
+		logger.TraceD,
+		logger.InfoD,
+		logger.DebugD,
+		logger.WarnD,
+		logger.ErrorD,
+		logger.FatalD,
+	}
+
+	for _, logMethod := range detailLogMethods {
+		logMethod("test message", "test detail")
+	}
+
+	jsonLogMethods := []func(string, string){
+		logger.TraceJ,
+		logger.InfoJ,
+		logger.DebugJ,
+		logger.WarnJ,
+		logger.ErrorJ,
+		logger.FatalJ,
+	}
+
+	for _, logMethod := range jsonLogMethods {
+		logMethod("test message", "test detail")
+	}
+
+	// don't forget to excercise the Write method as well as the other
+	// J methods.
+	logger.Write([]byte("test message"))
+
+	loggerService.Finish()
 }

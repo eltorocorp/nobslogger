@@ -26,12 +26,12 @@ const (
 )
 
 func init() {
-	// If changing the output format, be sure to also update the serializer, as
-	// it is expecting a 32 byte value.
 	fastime.SetFormat(time.RFC3339Nano)
 }
 
 func serialize(buffer []byte, sc *ServiceContext, lc *LogContext, ld LogDetail) (offset int) {
+	timestamp := fastime.FormattedNow()
+
 	// Avoiding a loop-construct saves a few cycles.
 	// Since we're being opinionated and know ahead of time how many fields
 	// we're processing, we can just explicitly construct the outbound message
@@ -40,8 +40,7 @@ func serialize(buffer []byte, sc *ServiceContext, lc *LogContext, ld LogDetail) 
 	offset += copy(buffer[offset:offset+len(braceOpenToken)], braceOpenToken)
 	offset += copy(buffer[offset:offset+len(timestampToken)], timestampToken)
 	offset += copy(buffer[offset:offset+len(fieldOpenToken)], fieldOpenToken)
-	// init function sets format to rfc3339nano, which is always 35 bytes long.
-	offset += copy(buffer[offset:offset+32], fastime.FormattedNow())
+	offset += copy(buffer[offset:offset+len(timestamp)], timestamp)
 	offset += copy(buffer[offset:offset+len(fieldCloseToken)], fieldCloseToken)
 	offset += copy(buffer[offset:offset+len(environmentToken)], environmentToken)
 	offset += copy(buffer[offset:offset+len(fieldOpenToken)], fieldOpenToken)
