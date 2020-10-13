@@ -23,8 +23,7 @@ func Test_ServiceInitializeWriterHappyPath(t *testing.T) {
 	loggerService := logger.InitializeWriterWithOptions(writer, logger.ServiceContext{}, logger.LogServiceOptions{})
 	logger := loggerService.NewContext("context site", "operation")
 	logger.Info("some info")
-	loggerService.Cancel()
-	loggerService.Wait()
+	loggerService.Finish()
 }
 
 func Test_ServiceInitializeWriterPersistentError(t *testing.T) {
@@ -40,8 +39,7 @@ func Test_ServiceInitializeWriterPersistentError(t *testing.T) {
 	loggerService := logger.InitializeWriterWithOptions(writer, logger.ServiceContext{}, logger.LogServiceOptions{})
 	logger := loggerService.NewContext("context site", "operation")
 	logger.Info("message")
-	loggerService.Cancel()
-	loggerService.Wait()
+	loggerService.Finish()
 }
 
 // The LogService must support ingestion of logs from LogContexts on different
@@ -54,7 +52,9 @@ func Test_LogServiceSupportsMultipleContexts(t *testing.T) {
 	writer.EXPECT().Write(gomock.Any()).Return(0, nil).Times(2)
 
 	serviceContext := logger.ServiceContext{}
-	loggerSvc := logger.InitializeWriter(writer, serviceContext)
+	loggerSvc := logger.InitializeWriterWithOptions(writer, serviceContext, logger.LogServiceOptions{
+		CancellationDeadline: 1 * time.Second,
+	})
 
 	go func() {
 		logger := loggerSvc.NewContext("1", "")
@@ -66,38 +66,7 @@ func Test_LogServiceSupportsMultipleContexts(t *testing.T) {
 		logger.Info("2")
 	}()
 
-	loggerSvc.Cancel()
-	loggerSvc.Wait()
-}
-
-// The LogService must support cancellation from a separate goroutine.
-func Test_LogServiceSupportsCancellationFromSeparateGoroutine(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	writer := mock_io.NewMockWriter(ctrl)
-	writer.EXPECT().Write(gomock.Any()).Return(0, nil).Times(3)
-
-	serviceContext := logger.ServiceContext{}
-	loggerSvc := logger.InitializeWriter(writer, serviceContext)
-
-	logger := loggerSvc.NewContext("n/a", "n/a")
-
-	go func() {
-		logger.Warn("extremely long operation")
-		time.Sleep(24 * 365.25 * time.Hour)
-	}()
-
-	go func() {
-		logger.Info("logging")
-	}()
-
-	go func() {
-		logger.Info("cancelling")
-		loggerSvc.Cancel()
-	}()
-
-	loggerSvc.Wait()
+	loggerSvc.Finish()
 }
 
 func TestLogServiceEscapesJSON(t *testing.T) {
@@ -126,12 +95,15 @@ func TestLogServiceEscapesJSON(t *testing.T) {
 
 	for _, s := range testCases {
 		f := func(t *testing.T) {
+			// 6 standard J methods plus the Write method.
+			const numberOfJMethods = 7
+
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
 			writer := mock_io.NewMockWriter(ctrl)
 			writer.EXPECT().Write(gomock.Any()).
-				AnyTimes().
+				Times(numberOfJMethods).
 				DoAndReturn(
 					func(bb []byte) (int, error) {
 						msg := string(bb)
@@ -155,18 +127,98 @@ func TestLogServiceEscapesJSON(t *testing.T) {
 					},
 				)
 
-			logService := logger.InitializeWriter(writer, logger.ServiceContext{
-				Environment:       s,
-				ServiceInstanceID: s,
-				ServiceName:       s,
-				SystemName:        s,
-			})
+			logService := logger.InitializeWriterWithOptions(writer,
+				logger.ServiceContext{
+					Environment:       s,
+					ServiceInstanceID: s,
+					ServiceName:       s,
+					SystemName:        s,
+				}, logger.LogServiceOptions{
+					CancellationDeadline: 10 * time.Millisecond,
+				})
 			log := logService.NewContext(s, s)
-			log.InfoD(s, s)
-			logService.Cancel()
-			logService.Wait()
+
+			jsonLogMethods := []func(string, string){
+				log.TraceJ,
+				log.InfoJ,
+				log.DebugJ,
+				log.WarnJ,
+				log.ErrorJ,
+				log.FatalJ,
+			}
+
+			for _, fn := range jsonLogMethods {
+				fn(s, s)
+			}
+
+			// don't forget to excercise the Write method as well as the other
+			// J methods.
+			log.Write([]byte(s))
+
+			logService.Finish()
 		}
 		t.Run("rune:"+s, f)
 	}
 
+}
+
+// Here we're just verifying that all of the context methods result in a call
+// to the underlaying writer.
+func Test_ContextMethodHappyPath(t *testing.T) {
+	// 6 standard methods, 6 D methods, 6 J methods, and 1 Write method.
+	const numberOfLogMethods = 19
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	writer := mock_io.NewMockWriter(ctrl)
+	writer.EXPECT().Write(gomock.Any()).Return(0, nil).Times(numberOfLogMethods)
+
+	loggerService := logger.InitializeWriterWithOptions(writer, logger.ServiceContext{}, logger.LogServiceOptions{})
+	logger := loggerService.NewContext("context site", "operation")
+
+	plainLogMethods := []func(string){
+		logger.Trace,
+		logger.Info,
+		logger.Debug,
+		logger.Warn,
+		logger.Error,
+		logger.Fatal,
+	}
+
+	for _, logMethod := range plainLogMethods {
+		logMethod("test message")
+	}
+
+	detailLogMethods := []func(string, string){
+		logger.TraceD,
+		logger.InfoD,
+		logger.DebugD,
+		logger.WarnD,
+		logger.ErrorD,
+		logger.FatalD,
+	}
+
+	for _, logMethod := range detailLogMethods {
+		logMethod("test message", "test detail")
+	}
+
+	jsonLogMethods := []func(string, string){
+		logger.TraceJ,
+		logger.InfoJ,
+		logger.DebugJ,
+		logger.WarnJ,
+		logger.ErrorJ,
+		logger.FatalJ,
+	}
+
+	for _, logMethod := range jsonLogMethods {
+		logMethod("test message", "test detail")
+	}
+
+	// don't forget to excercise the Write method as well as the other
+	// J methods.
+	logger.Write([]byte("test message"))
+
+	loggerService.Finish()
 }
