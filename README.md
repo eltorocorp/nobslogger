@@ -20,19 +20,19 @@ No BS:
 # Performance
 
 NobSlogger is very opinionated. And it is fast as a result\*.
-| Package                               | Time         |  Time % to NobSlogger | Objects Allocated |
-|---------------------------------------|--------------|-----------------------|-------------------|
-| :cow: NobSlogger.Info-4               | 3456 ns/op   | +0%                   | 3 allocs/op       |
-| :cow: NobSlogger.InfoD-4              | 3665 ns/op   | +6%                   | 3 allocs/op       |
-| rs/zerolog.Check-4                    | 4710 ns/op   | +36%                  | 0 allocs/op       |
-| rs/zerolog-4                          | 4729 ns/op   | +37%                  | 0 allocs/op       |
-| uber-go/Zap-4                         | 6454 ns/op   | +87%                  | 1 allocs/op       |
-| uber-go/Zap.Check-4                   | 6542 ns/op   | +89%                  | 1 allocs/op       |
-| uber-go/Zap.Sugar-4                   | 7545 ns/op   | +118%                 | 3 allocs/op       |
-| go-kit/kit/log-4                      | 20891 ns/op  | +504%                 | 25 allocs/op      |
-| apex/log-4                            | 71477 ns/op  | +1968%                | 27 allocs/op      |
-| inconshreveable/log15-4               | 81934 ns/op  | +2271%                | 35 allocs/op      |
-| sirupsen/logrus-4                     | 84882 ns/op  | +2356%                | 39 allocs/op      |
+|Package|Time|Time %|Allocations|
+|-------|----|------|-----------|
+|:cow: eltorocorp/logger.Info-4 |309  ns/op|    0%|0  allocs/op|
+|:cow: eltorocorp/logger.InfoD-4         |324  ns/op|    5%|0  allocs/op|
+|rs/zerolog.Check-4       |355  ns/op|   15%|0  allocs/op|
+|rs/zerolog-4             |357  ns/op|   16%|0  allocs/op|
+|Zap-4         |476  ns/op|   54%|0  allocs/op|
+|Zap.Check-4   |505  ns/op|   63%|0  allocs/op|
+|Zap.Sugar-4   |971  ns/op|  214%|2  allocs/op|
+|go-kit/kit/log-4         |3189  ns/op|  932%|24  allocs/op|
+|apex/log-4    |8199  ns/op| 2553%|25  allocs/op|
+|sirupsen/logrus-4        |8556  ns/op| 2669%|37  allocs/op|
+|inconshreveable/log15-4  |9620  ns/op| 3013%|31  allocs/op|
 
 > *\*NobSlogger's benchmarks are based on the accumulated context benchmark suite used by the Zap and Zerolog loggers.
 Since NobSlogger is so much more opinionated than Zap and Zerolog, the other benchmarks they often use to compare eachother don't apply well to NobSlogger. However, the accumulated context benchmark suite is a fair representation of what is likely the most apples to apples use case between all three systems.*
