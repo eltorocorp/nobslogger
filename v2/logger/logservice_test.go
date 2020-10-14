@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/eltorocorp/nobslogger/mocks/mock_io"
 	"github.com/eltorocorp/nobslogger/v2/logger"
+	"github.com/eltorocorp/nobslogger/v2/mocks/mock_io"
 	"github.com/golang/mock/gomock"
 )
 
