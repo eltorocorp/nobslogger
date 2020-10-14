@@ -1,10 +1,10 @@
 # :cow: NobSlogger 
 NobSlogger. A fast, opinionated, lightweight, no-BS, static-structured/leveled logger.
 
-[![godoc](http://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/eltorocorp/nobslogger)
-[![Go Report Card](https://goreportcard.com/badge/github.com/eltorocorp/nobslogger)](https://goreportcard.com/report/github.com/eltorocorp/nobslogger)
+[![godoc](http://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/eltorocorp/nobslogger/v2)
+[![Go Report Card](https://goreportcard.com/badge/github.com/eltorocorp/nobslogger/v2)](https://goreportcard.com/report/github.com/eltorocorp/nobslogger/v2)
 [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/eltorocorp/nobslogger/master/LICENSE)
-[![Coverage](http://gocover.io/_badge/github.com/eltorocorp/nobslogger/logger)](http://gocover.io/github.com/eltorocorp/nobslogger/logger)
+[![Coverage](http://gocover.io/_badge/github.com/eltorocorp/nobslogger/v2/logger)](http://gocover.io/github.com/eltorocorp/nobslogger/logger/v2)
 
 No BS:
  - NobSlogger is opinionated. 
@@ -15,7 +15,7 @@ No BS:
 
 # Installation
 
-`go get -u github.com/eltorocorp/nobslogger`
+`go get -u github.com/eltorocorp/nobslogger/v2`
 
 # Performance
 
@@ -66,5 +66,5 @@ Each structural level presents progressively more detail about the context withi
 
 # Examples
 
-- view examples in the docs [here](https://pkg.go.dev/github.com/eltorocorp/nobslogger/logger#pkg-examples)
-- or view the same examples in code [here](/logger/examples_test.go)
+- view examples in the docs [here](https://pkg.go.dev/github.com/eltorocorp/nobslogger/v2/logger#pkg-examples)
+- or view the same examples in code [here](v2/logger/examples_test.go)
