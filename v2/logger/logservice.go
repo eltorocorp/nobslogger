@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"runtime"
 	"sync/atomic"
 	"time"
 )
@@ -180,6 +181,7 @@ func (ls *LogService) NewContext(site, operation string) LogContext {
 func (ls *LogService) Finish() {
 	deadline := time.Now().Add(ls.options.CancellationDeadline)
 	for {
+		runtime.Gosched()
 		if time.Now().Before(deadline) {
 			continue
 		}
