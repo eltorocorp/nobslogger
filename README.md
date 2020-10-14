@@ -1,7 +1,7 @@
 # :cow: NobSlogger 
 NobSlogger. A fast, opinionated, lightweight, no-BS, static-structured/leveled logger.
 
-[![godoc](http://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/eltorocorp/nobslogger/v2)
+[![godoc](http://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://pkg.go.dev/github.com/eltorocorp/nobslogger/v2/logger)
 [![Go Report Card](https://goreportcard.com/badge/github.com/eltorocorp/nobslogger/v2)](https://goreportcard.com/report/github.com/eltorocorp/nobslogger/v2)
 [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/eltorocorp/nobslogger/master/LICENSE)
 [![Coverage](http://gocover.io/_badge/github.com/eltorocorp/nobslogger/v2/logger)](http://gocover.io/github.com/eltorocorp/nobslogger/logger/v2)
